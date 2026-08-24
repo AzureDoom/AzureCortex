@@ -15,6 +15,7 @@ import com.azure.azurecortex.config.CortexConfig;
  * exists so each platform module (Fabric/NeoForge) has one shared place to initialize framework-level state — right
  * now, just loading {@link CortexConfig} — regardless of which loader is running.
  */
+@SuppressWarnings("unused")
 public final class AzureCortex {
 
     public static final String MOD_ID = "azurecortex";
@@ -24,7 +25,7 @@ public final class AzureCortex {
     private AzureCortex() {}
 
     public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return new ResourceLocation(MOD_ID, path);
     }
 
     /**

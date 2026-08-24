@@ -88,7 +88,7 @@ public final class CollisionQueries {
      */
     public static boolean isClimbable(Level level, int x, int y, int z, boolean generous) {
         var reachBox = new AABB(x, y, z, x + 1, y + 1, z + 1).inflate(generous ? 1.5D : 0.5D);
-        return !level.noBlockCollision(null, reachBox);
+        return !level.noCollision(null, reachBox);
     }
 
     /**

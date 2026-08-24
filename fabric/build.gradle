@@ -47,7 +47,7 @@ if (keyPropsFile.exists()) {
             projectSlug = project.projectSlug
             accessToken = releaseProp.getProperty("curseKey")
             minecraftVersions.add("${minecraft_version}")
-            javaVersions.add(JavaVersion.VERSION_21)
+            javaVersions.add(JavaVersion.VERSION_17)
             requires {
                 slug = "fabric-api"
             }

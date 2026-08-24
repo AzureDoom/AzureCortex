@@ -1,18 +1,17 @@
 plugins {
     id 'multiloader-loader'
-    id 'net.neoforged.moddev' version "${neo_moddev}"
+    id 'net.neoforged.moddev.legacyforge'
     id 'me.modmuss50.mod-publish-plugin' version "${modmuss50_mod_publish_version}"
     id 'com.diffplug.spotless'
 }
 
-neoForge {
-    version = "${neo_version}"
+legacyForge {
+    version = "${minecraft_version}-${neo_version}"
 
     parchment {
-        minecraftVersion = "${parchment_minecraft}"
-        mappingsVersion = "${parchment_version}"
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
     }
-
     runs {
         client {
             client()
@@ -20,19 +19,17 @@ neoForge {
         }
         server {
             server()
-            programArgument '--nogui'
             gameDirectory = this.mkdir(this.file('runs/server'))
         }
         configureEach {
-            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
-            ideName = "NeoForge ${it.name.capitalize()} (${project.path})"
+            ideName = "Forge ${it.name.capitalize()} (${project.path})"
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }
 
     mods {
         "${mod_id}" {
-            sourceSet(sourceSets.main)
+            sourceSet sourceSets.main
         }
     }
 }
@@ -47,14 +44,14 @@ if (keyPropsFile.exists()) {
         file = jar.archiveFile
         changelog = rootProject.file("changelog.md").text
         type = STABLE
-        modLoaders.add("neoforge")
+        modLoaders.add("forge")
 
         curseforge {
             projectId = project.curseforgeID
             projectSlug = project.projectSlug
             accessToken = releaseProp.getProperty("curseKey")
             minecraftVersions.add("${minecraft_version}")
-            javaVersions.add(JavaVersion.VERSION_21)
+            javaVersions.add(JavaVersion.VERSION_17)
             client = true
             server = true
         }

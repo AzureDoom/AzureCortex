@@ -451,7 +451,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
             feet.getY() + crawlHeight,
             feet.getZ() + 0.5D + testHalfW
         );
-        return level.noBlockCollision(mob, mobBox);
+        return level.noCollision(mob, mobBox);
     }
 
     @Override
@@ -494,7 +494,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
             bottomY + testHeight,
             feet.getZ() + 0.5D + testHalfW
         );
-        return level.noBlockCollision(mob, mobBox);
+        return level.noCollision(mob, mobBox);
     }
 
     /** Routes a solidity check through the cache when one is available. */
@@ -602,7 +602,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                 bottomY + testHeight,
                 to.getZ() + 0.5D + testHalfW
             );
-            if (!level.noBlockCollision(mob, mobBox)) {
+            if (!level.noCollision(mob, mobBox)) {
                 return 9999.0D;
             }
         }
@@ -699,7 +699,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
             feet.getZ() + 0.5D + testHalfW
         );
 
-        return level.noBlockCollision(mob, mobBox);
+        return level.noCollision(mob, mobBox);
     }
 
     public static boolean canStandAtCrawlSize(Level level, Mob mob, BlockPos feet) {
@@ -765,7 +765,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                 var t = i / (double) vertSteps;
                 var p = new Vec3(sweepOriginX, fromCenter.y + dy * t, sweepOriginZ);
                 var box = new AABB(p.x - halfW, p.y, p.z - halfW, p.x + halfW, p.y + height, p.z + halfW);
-                if (!level.noBlockCollision(mob, box)) {
+                if (!level.noCollision(mob, box)) {
                     return false;
                 }
             }
@@ -777,7 +777,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                     var t = i / (double) horizSteps;
                     var p = new Vec3(fromCenter.x + horizDelta.x * t, toCenter.y, fromCenter.z + horizDelta.z * t);
                     var box = new AABB(p.x - halfW, p.y, p.z - halfW, p.x + halfW, p.y + height, p.z + halfW);
-                    if (!level.noBlockCollision(mob, box)) {
+                    if (!level.noCollision(mob, box)) {
                         return false;
                     }
                 }
@@ -794,7 +794,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
 
             var box = new AABB(p.x - halfW, p.y, p.z - halfW, p.x + halfW, p.y + height, p.z + halfW);
 
-            if (!level.noBlockCollision(mob, box)) {
+            if (!level.noCollision(mob, box)) {
                 return false;
             }
         }

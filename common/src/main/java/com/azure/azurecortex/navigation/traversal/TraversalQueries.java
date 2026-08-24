@@ -18,6 +18,7 @@ import com.azure.azurecortex.api.navigation.MovementCapability;
  * {@link MovementCapability#isPassableSolid} — rather than any fixed tag set, since what counts as dangerous or
  * pass-through terrain is entirely mod-specific.
  */
+@SuppressWarnings("unused")
 public final class TraversalQueries {
 
     private TraversalQueries() {}
