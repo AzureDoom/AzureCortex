@@ -1,0 +1,68 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev' version "${neo_moddev}"
+    id 'me.modmuss50.mod-publish-plugin' version "${modmuss50_mod_publish_version}"
+    id 'com.diffplug.spotless'
+}
+
+neoForge {
+    version = "${neo_version}"
+
+    parchment {
+        minecraftVersion = "${parchment_minecraft}"
+        mappingsVersion = "${parchment_version}"
+    }
+
+    runs {
+        client {
+            client()
+            gameDirectory = this.mkdir(this.file('runs/client'))
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            gameDirectory = this.mkdir(this.file('runs/server'))
+        }
+        configureEach {
+            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
+            ideName = "NeoForge ${it.name.capitalize()} (${project.path})"
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+def keyPropsFile = new File(rootProject.projectDir, "key.properties")
+if (keyPropsFile.exists()) {
+    publishMods {
+        def releaseProp = new Properties()
+        releaseProp.load(new FileInputStream(keyPropsFile))
+        file = jar.archiveFile
+        changelog = rootProject.file("changelog.md").text
+        type = STABLE
+        modLoaders.add("neoforge")
+
+        curseforge {
+            projectId = project.curseforgeID
+            projectSlug = project.projectSlug
+            accessToken = releaseProp.getProperty("curseKey")
+            minecraftVersions.add("${minecraft_version}")
+            javaVersions.add(JavaVersion.VERSION_21)
+            client = true
+            server = true
+        }
+        modrinth {
+            projectId = project.modrinthID
+            accessToken = releaseProp.getProperty('modrinthKey')
+            minecraftVersions.add("${minecraft_version}")
+            environment = CLIENT_AND_SERVER
+        }
+    }
+}

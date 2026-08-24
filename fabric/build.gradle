@@ -1,0 +1,67 @@
+plugins {
+    id 'multiloader-loader'
+    id 'fabric-loom' version "${fabric_loom_version}"
+    id 'me.modmuss50.mod-publish-plugin' version "${modmuss50_mod_publish_version}"
+    id 'com.diffplug.spotless'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
+    }
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+}
+
+loom {
+    runs {
+        client {
+            client()
+            setConfigName("Fabric Client")
+            ideConfigGenerated(true)
+            runDir("runs/client")
+        }
+        server {
+            server()
+            setConfigName("Fabric Server")
+            ideConfigGenerated(true)
+            runDir("runs/server")
+        }
+    }
+}
+
+def keyPropsFile = new File(rootProject.projectDir, "key.properties")
+if (keyPropsFile.exists()) {
+    publishMods {
+        def releaseProp = new Properties()
+        releaseProp.load(new FileInputStream(keyPropsFile))
+        file = remapJar.archiveFile
+        changelog = rootProject.file("changelog.md").text
+        type = STABLE
+        modLoaders.add("fabric")
+
+        curseforge {
+            projectId = project.curseforgeID
+            projectSlug = project.projectSlug
+            accessToken = releaseProp.getProperty("curseKey")
+            minecraftVersions.add("${minecraft_version}")
+            javaVersions.add(JavaVersion.VERSION_21)
+            requires {
+                slug = "fabric-api"
+            }
+            client = true
+            server = true
+        }
+        modrinth {
+            projectId = project.modrinthID
+            accessToken = releaseProp.getProperty('modrinthKey')
+            minecraftVersions.add("${minecraft_version}")
+            requires {
+                slug = "fabric-api"
+            }
+            environment = CLIENT_AND_SERVER
+        }
+    }
+}

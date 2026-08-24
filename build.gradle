@@ -1,0 +1,5 @@
+plugins {
+    // Required for NeoGradle
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.4.1"
+    id 'com.diffplug.spotless' version "8.8.0" apply(false)
+}

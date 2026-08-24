@@ -1,0 +1,46 @@
+plugins {
+    id 'multiloader-common'
+    id 'net.neoforged.moddev' version "${neo_moddev}"
+    id 'com.diffplug.spotless'
+}
+
+neoForge {
+    neoFormVersion = "${neoform_version}"
+
+    parchment {
+        minecraftVersion = "${parchment_minecraft}"
+        mappingsVersion = "${parchment_version}"
+    }
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+}
+
+dependencies {
+    // AzureCortex is pure common-code: a framework of interfaces, records, and stateless utilities operating
+    // against vanilla Mob/Level types only. It intentionally has no dependency on AzureLib, mixins, or any other
+    // mod - consuming mods (e.g. Ovomorphosis) wire their own entities into the framework's capability interfaces
+    // (MovementCapability, CrawlCapability, AgentRole, ...) directly.
+}
+
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    commonJava(sourceSets.main.java.srcDirs.find { it.exists() })
+    commonResources(sourceSets.main.resources.srcDirs.find { it.exists() })
+}
