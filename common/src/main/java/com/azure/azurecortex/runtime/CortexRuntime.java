@@ -209,24 +209,39 @@ public final class CortexRuntime<E extends Mob, G> {
      *         is now {@code null}
      */
     private boolean applyOutcome(ActionOutcome<G> outcome) {
-        return switch (outcome) {
-            case ActionOutcome.Running<G> ignored -> true;
-            case ActionOutcome.Blocked<G> blocked -> {
-                writePlanFeedback(blocked.reason(), blocked.at(), blocked.goalType(), blocked.blockingPositions());
-                yield true;
-            }
-            case ActionOutcome.Success<G> ignored -> {
-                currentAction.stop(agent, blackboard, cooldowns, ActionStatus.SUCCESS);
-                currentAction = null;
-                yield false;
-            }
-            case ActionOutcome.Failed<G> failed -> {
-                writePlanFeedback(failed.reason(), failed.at(), failed.goalType(), failed.blockingPositions());
-                currentAction.stop(agent, blackboard, cooldowns, ActionStatus.FAILURE);
-                currentAction = null;
-                yield false;
-            }
-        };
+        if (outcome instanceof ActionOutcome.Running<G>) {
+            return true;
+        }
+
+        if (outcome instanceof ActionOutcome.Blocked<G> blocked) {
+            writePlanFeedback(
+                blocked.reason(),
+                blocked.at(),
+                blocked.goalType(),
+                blocked.blockingPositions()
+            );
+            return true;
+        }
+
+        if (outcome instanceof ActionOutcome.Success<G>) {
+            currentAction.stop(agent, blackboard, cooldowns, ActionStatus.SUCCESS);
+            currentAction = null;
+            return false;
+        }
+
+        if (outcome instanceof ActionOutcome.Failed<G> failed) {
+            writePlanFeedback(
+                failed.reason(),
+                failed.at(),
+                failed.goalType(),
+                failed.blockingPositions()
+            );
+            currentAction.stop(agent, blackboard, cooldowns, ActionStatus.FAILURE);
+            currentAction = null;
+            return false;
+        }
+
+        throw new IllegalStateException("Unknown ActionOutcome: " + outcome);
     }
 
     @SuppressWarnings("unchecked")

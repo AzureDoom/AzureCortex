@@ -164,7 +164,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
             }
         }
         if (filtered.isEmpty() && !path.isEmpty()) {
-            filtered.add(path.getLast());
+            filtered.add(path.get(path.size() - 1));
         }
         return filtered;
     }

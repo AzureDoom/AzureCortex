@@ -83,7 +83,7 @@ public final class CortexDiagnostics {
         if (blockingPositions.isEmpty())
             return feedback.reason().name();
 
-        var pos = blockingPositions.getFirst();
+        var pos = blockingPositions.get(0);
         return feedback.reason().name() + "(" + describeBlock(agent, pos) + "@" + pos.getX() + "," + pos.getY() + ","
             + pos.getZ() + ")";
     }
