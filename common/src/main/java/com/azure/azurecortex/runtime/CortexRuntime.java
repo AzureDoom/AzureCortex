@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.azure.azurecortex.AzureCortex;
 import com.azure.azurecortex.api.action.Action;
 import com.azure.azurecortex.api.action.ActionOutcome;
 import com.azure.azurecortex.api.action.ActionStatus;
@@ -126,6 +127,22 @@ public final class CortexRuntime<E extends Mob, G> {
     public void tick() {
         if (agent.isNoAi())
             return;
+
+        try {
+            tickInternal();
+        } catch (Exception e) {
+            AzureCortex.LOGGER.error(
+                "CortexRuntime.tick() threw for {} ({}) at {} — resetting to a safe state to recover",
+                agent.getType(),
+                agent.getStringUUID(),
+                agent.blockPosition(),
+                e
+            );
+            resetAfterError();
+        }
+    }
+
+    private void tickInternal() {
         cooldowns.tick();
 
         var actionIsLocked = currentAction != null
@@ -176,6 +193,31 @@ public final class CortexRuntime<E extends Mob, G> {
         logDiagnosticsIfEnabled();
     }
 
+    /**
+     * Recovery hook for {@link #tick()}'s catch block. Forcibly clears whatever action was running (without trusting
+     * its own {@link Action#stop} to behave, since that action's state is exactly what may be broken) and drops
+     * targeting/goal state back to a safe, passive baseline, so the tree starts clean on the next tick instead of
+     * repeating the same failure indefinitely.
+     */
+    private void resetAfterError() {
+        if (currentAction != null) {
+            try {
+                currentAction.stop(agent, blackboard, cooldowns, ActionStatus.INTERRUPTED);
+            } catch (Exception ignored) {
+                // The action's own stop() may itself be part of what's broken — swallow so recovery still completes.
+            }
+            currentAction = null;
+        }
+        blackboard.remove(CommonBlackboardKeys.TARGET);
+        blackboard.remove(CommonBlackboardKeys.GOAL_TARGET);
+        blackboard.remove(CommonBlackboardKeys.ACTIVE_GOAL);
+        blackboard.remove(CommonBlackboardKeys.ACTIVE_GOAL_TYPE);
+        blackboard.remove(CommonBlackboardKeys.DESTINATION);
+        blackboard.remove(CommonBlackboardKeys.GOAL_DESTINATION);
+        blackboard.remove(CommonBlackboardKeys.LAST_PLAN_FEEDBACK);
+        cooldowns.set(CommonBlackboardKeys.PASSIVE_DECISION, 1);
+    }
+
     private void runPeriodicHooks() {
         for (var registered : periodicHooks) {
             if (cooldowns.ready(registered.cooldownKey())) {
@@ -214,12 +256,7 @@ public final class CortexRuntime<E extends Mob, G> {
         }
 
         if (outcome instanceof ActionOutcome.Blocked<G> blocked) {
-            writePlanFeedback(
-                blocked.reason(),
-                blocked.at(),
-                blocked.goalType(),
-                blocked.blockingPositions()
-            );
+            writePlanFeedback(blocked.reason(), blocked.at(), blocked.goalType(), blocked.blockingPositions());
             return true;
         }
 
@@ -230,18 +267,13 @@ public final class CortexRuntime<E extends Mob, G> {
         }
 
         if (outcome instanceof ActionOutcome.Failed<G> failed) {
-            writePlanFeedback(
-                failed.reason(),
-                failed.at(),
-                failed.goalType(),
-                failed.blockingPositions()
-            );
+            writePlanFeedback(failed.reason(), failed.at(), failed.goalType(), failed.blockingPositions());
             currentAction.stop(agent, blackboard, cooldowns, ActionStatus.FAILURE);
             currentAction = null;
             return false;
         }
 
-        throw new IllegalStateException("Unknown ActionOutcome: " + outcome);
+        throw new IllegalStateException("Unhandled ActionOutcome: " + outcome);
     }
 
     @SuppressWarnings("unchecked")
