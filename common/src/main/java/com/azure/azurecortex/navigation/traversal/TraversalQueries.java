@@ -205,6 +205,7 @@ public final class TraversalQueries {
      * @param mob the mob to find shore for
      * @return the nearest matching ground position found, or {@code null} if none was found within range
      */
+    @SuppressWarnings("unused")
     public static BlockPos findNearbyGroundPos(Mob mob) {
         var level = mob.level();
         var origin = mob.blockPosition();

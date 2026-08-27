@@ -66,18 +66,6 @@ public final class CommonBlackboardKeys {
     public static final BlackboardKey<String> LAST_GOAL_REASON = BlackboardKey.of("last_goal_reason", String.class);
 
     /**
-     * Type: {@link Integer}. Prevents the passive (non-threat) branch of the behavior tree from ticking every frame.
-     * Set to a high value on passive-action start; cleared to 1 on interruption.
-     */
-    public static final BlackboardKey<Integer> PASSIVE_DECISION = BlackboardKey.of("passive_decision", Integer.class);
-
-    /**
-     * Type: {@link Integer}. Rate-limits how often the GOAP planner is allowed to re-evaluate goals. Typically set to
-     * 20 ticks after each replan.
-     */
-    public static final BlackboardKey<Integer> GOAL_REPLAN = BlackboardKey.of("goal_replan", Integer.class);
-
-    /**
      * Type (raw): {@link PlanFeedback}. Written by the runtime when an action reports a non-{@code NONE} failure reason
      * via {@code ActionOutcome.Blocked}/{@code ActionOutcome.Failed}. The planner reads this on the next planning
      * cycle, uses it to bias goal scores, then clears it so stale feedback does not persist.
@@ -126,6 +114,18 @@ public final class CommonBlackboardKeys {
 
     /** Cooldown key: time between lunge/gap-closing attempts. */
     public static final String LUNGE_COOLDOWN = "lunge_cooldown";
+
+    /**
+     * Cooldown key. Prevents the passive (non-threat) branch of the behavior tree from ticking every frame. Set to a
+     * high value on passive-action start; cleared to 1 on interruption.
+     */
+    public static final String PASSIVE_DECISION = "passive_decision";
+
+    /**
+     * Cooldown key. Rate-limits how often the GOAP planner is allowed to re-evaluate goals. Typically set to 20 ticks
+     * after each replan.
+     */
+    public static final String GOAL_REPLAN = "goal_replan";
 
     /**
      * Type: {@link Float}. Persistent fire-tolerance counter for a flee-fire style action. Accumulates while fire is
