@@ -2,6 +2,7 @@ package com.azure.azurecortex.api.blackboard;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 import com.azure.azurecortex.goap.GoalFailureCooldowns;
 import com.azure.azurecortex.goap.PlanFeedback;
@@ -34,10 +35,35 @@ public final class CommonBlackboardKeys {
     /** Type: {@link LivingEntity}. The target associated with the currently committed goal, if any. */
     public static final BlackboardKey<LivingEntity> GOAL_TARGET = BlackboardKey.of("goal_target", LivingEntity.class);
 
-    /** Type: {@link BlockPos}. Last confirmed world position where the active target was seen. */
+    /**
+     * Type: {@link BlockPos}. The target's position the last time the agent had genuine, unobstructed visibility of it
+     * — as opposed to {@link #LAST_KNOWN_TARGET_POS}, which tracks the target's live position every tick regardless of
+     * visibility. This distinction is what makes this key meaningful as a "last seen" snapshot: it freezes the moment
+     * visibility is lost (e.g. the target ducks around a corner) instead of continuing to update, giving
+     * {@link #LAST_SEEN_VELOCITY}/{@link #LAST_SEEN_TICK} something genuine to extrapolate a search point from — see
+     * {@code com.azure.azurecortex.sensing.TargetPrediction}. Written by {@code TargetSensor} only when constructed
+     * with a visibility predicate; agents that don't supply one never see this key populated.
+     */
     public static final BlackboardKey<BlockPos> LAST_SEEN_POS = BlackboardKey.of("last_seen_pos", BlockPos.class);
 
-    /** Alias kept for legacy action references; prefer {@link #LAST_SEEN_POS} for new code. */
+    /**
+     * Type: {@link Vec3}. The target's horizontal velocity (y always {@code 0}) at the moment {@link #LAST_SEEN_POS}
+     * was last updated. Lets an investigate-style action extrapolate a believable interception point instead of only
+     * ever walking to the exact last-seen block — see {@code com.azure.azurecortex.sensing.TargetPrediction}.
+     */
+    public static final BlackboardKey<Vec3> LAST_SEEN_VELOCITY = BlackboardKey.of("last_seen_velocity", Vec3.class);
+
+    /**
+     * Type: {@link Integer}. Game tick at which {@link #LAST_SEEN_POS} was last updated. Lets an investigate-style
+     * action scale how far to extrapolate ahead by how long the target has actually been out of sight, and discard the
+     * prediction entirely once it's stale enough that the target could be almost anywhere.
+     */
+    public static final BlackboardKey<Integer> LAST_SEEN_TICK = BlackboardKey.of("last_seen_tick", Integer.class);
+
+    /**
+     * Type: {@link BlockPos}. Wherever the target currently is, updated every tick it's alive regardless of visibility.
+     * Distinct from {@link #LAST_SEEN_POS}, which only updates when the target is genuinely visible.
+     */
     public static final BlackboardKey<BlockPos> LAST_KNOWN_TARGET_POS = BlackboardKey.of(
         "last_known_target_pos",
         BlockPos.class
