@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import java.nio.file.Path;
 
 import com.azure.azurecortex.config.CortexConfig;
+import com.azure.azurecortex.example.ExampleRegistry;
 
 /**
  * Common (loader-agnostic) entry point for AzureCortex.
@@ -40,5 +41,6 @@ public final class AzureCortex {
             CortexConfig.get().enableAiDiagnostics,
             CortexConfig.get().enablePathfindingDebug
         );
+        ExampleRegistry.initialize();
     }
 }
