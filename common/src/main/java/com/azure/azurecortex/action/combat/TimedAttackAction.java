@@ -15,6 +15,11 @@ import com.azure.azurecortex.runtime.CooldownTracker;
  * {@link MeleeHitResolver#tryStrike} against whatever is stored under {@link CommonBlackboardKeys#TARGET}, then sets
  * {@code cooldownKey} for {@code cooldownTicks}.
  * <p>
+ * Faces the target every tick throughout the windup (not just at the hit instant) via
+ * {@code Mob#getLookControl().setLookAt}, the same thing {@link MeleeHitResolver#tryStrike} additionally does right
+ * before a hit lands — without this, a mob with a windup longer than a tick or two visibly stands still without turning
+ * to face what it's about to hit, which becomes noticeable the longer {@code windupTicks} is.
+ * <p>
  * Reusable across differently-named attacks by constructing several instances with different windup/reach/cooldown
  * values and a distinct {@link #debugName()} label — see {@link AttackProfile}, which is the intended way to offer
  * several of these to a behavior tree at once.
@@ -56,6 +61,8 @@ public class TimedAttackAction<E extends Mob, G> implements Action<E, G> {
         if (target == null || !target.isAlive()) {
             return ActionOutcome.failed(PlanFailureReason.FAILED_TARGET_LOST);
         }
+
+        agent.getLookControl().setLookAt(target, 30.0F, 30.0F);
 
         ticksElapsed++;
         if (ticksElapsed < windupTicks) {

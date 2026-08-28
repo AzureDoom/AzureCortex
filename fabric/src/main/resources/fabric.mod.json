@@ -18,8 +18,14 @@
   "entrypoints": {
     "main": [
       "com.azure.azurecortex.platform.AzureCortexFabric"
+    ],
+    "client": [
+      "com.azure.azurecortex.platform.AzureCortexClientMod"
     ]
   },
+  "mixins": [
+    "azurecortex.fabric.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": "*",

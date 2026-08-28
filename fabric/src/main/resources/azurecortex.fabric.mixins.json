@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.azure.azurecortex.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "azurecortex.refmap.json",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "MixinEntityTypeBuilder_SilenceDataFixerError"
+  ],
+  "client": []
+}
