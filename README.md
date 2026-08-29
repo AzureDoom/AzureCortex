@@ -39,12 +39,12 @@ egg to see it in the world:
 
 ## Supported versions & loaders
 
-| Minecraft version | Forge         | Fabric       | NeoForge              |
-|-------------------|---------------|--------------|-----------------------|
-| 1.18.2            | 🔜 planned    | 🔜 planned   | ❌No NeoForge version |
-| 1.20.1            | ✅ available  | ✅ available | ❌No NeoForge version |
-| 1.21.1            | ❌ no support | ✅ available | ✅ available          |
-| 26.2              | ❌ no support | 🔜 planned   | 🔜 planned            |
+| Minecraft version | Forge          | Fabric         | NeoForge              |
+|-------------------|----------------|----------------|-----------------------|
+| 1.18.2            | ✅ available   | ✅ available   | ❌No NeoForge version |
+| 1.20.1            | ✅ available   | ✅ available   | ❌No NeoForge version |
+| 1.21.1            | ❌ no support  | ✅ available   | ✅ available          |
+| 26.2              | ❌ no support  | 🔜 planned     | 🔜 planned            |
 
 ## For mod developers
 
@@ -64,7 +64,7 @@ Full documentation lives on the [GitHub wiki](https://github.com/AzureDoom/Azure
   zombie, traced end to end.
 - [Ranged Example Walkthrough (Skeleton)](https://github.com/AzureDoom/AzureCortex/wiki/Ranged-Example-Walkthrough-Skeleton)
   and [Wall-Climbing Example (Spider)](<https://github.com/AzureDoom/AzureCortex/wiki/Wall-Climbing-Example-(Spider)>)
- , the other two bundled examples.
+  , the other two bundled examples.
 - Reference pages for [Behavior Trees](https://github.com/AzureDoom/AzureCortex/wiki/Behavior-Trees),
   [GOAP Planning](https://github.com/AzureDoom/AzureCortex/wiki/GOAP-Planning),
   [Sensing](https://github.com/AzureDoom/AzureCortex/wiki/Sensing),
