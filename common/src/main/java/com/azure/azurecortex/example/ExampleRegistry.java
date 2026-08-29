@@ -10,6 +10,7 @@ import net.minecraft.world.item.SpawnEggItem;
 import java.util.function.Supplier;
 
 import com.azure.azurecortex.example.skeleton.CortexSkeletonEntity;
+import com.azure.azurecortex.example.spider.CortexSpiderEntity;
 import com.azure.azurecortex.example.zombie.CortexZombieEntity;
 import com.azure.azurecortex.services.ExampleServices;
 
@@ -20,13 +21,32 @@ public class ExampleRegistry {
     public static final Supplier<EntityType<CortexZombieEntity>> CORTEX_ZOMBIE = registerEntity(
         "cortex_zombie",
         CortexZombieEntity::new,
+        0.6F,
         1.95F
     );
 
     public static final Supplier<EntityType<CortexSkeletonEntity>> CORTEX_SKELETON = registerEntity(
         "cortex_skeleton",
         CortexSkeletonEntity::new,
+        0.6F,
         1.99F
+    );
+
+    public static final Supplier<EntityType<CortexSpiderEntity>> CORTEX_SPIDER = registerEntity(
+        "cortex_spider",
+        CortexSpiderEntity::new,
+        1.4F,
+        0.9F
+    );
+
+    public static final Supplier<SpawnEggItem> CORTEX_SPIDER_SPAWN_EGG = registerItem(
+        "cortex_spider_spawn_egg",
+        ExampleServices.COMMON_REGISTRY.makeSpawnEggFor(
+            ExampleRegistry.CORTEX_SPIDER,
+            3419431,
+            11013646,
+            new Item.Properties()
+        )
     );
 
     public static final Supplier<SpawnEggItem> CORTEX_SKELETON_SPAWN_EGG = registerItem(
@@ -49,24 +69,25 @@ public class ExampleRegistry {
         )
     );
 
+    static <T extends Entity> SilencedEntityTypeBuilder create(
+        EntityType.EntityFactory<T> entity,
+        float width,
+        float height
+    ) {
+        return (SilencedEntityTypeBuilder) EntityType.Builder.of(entity, MobCategory.MONSTER).sized(width, height);
+    }
+
     static <T extends Entity> Supplier<EntityType<T>> registerEntity(
         String entityName,
         EntityType.EntityFactory<T> entity,
+        float width,
         float height
     ) {
         return ExampleServices.COMMON_REGISTRY.register(
             BuiltInRegistries.ENTITY_TYPE,
             entityName,
-            () -> create(entity, height).buildWithoutDataFixerCheck()
+            () -> create(entity, width, height).buildWithoutDataFixerCheck()
         );
-    }
-
-    static <T extends Entity> SilencedEntityTypeBuilder create(
-        EntityType.EntityFactory<T> entity,
-        float height
-    ) {
-        return (SilencedEntityTypeBuilder) EntityType.Builder.of(entity, MobCategory.MONSTER)
-            .sized((float) 0.6, height);
     }
 
     public static <T extends Item> Supplier<T> registerItem(String itemName, Supplier<T> item) {

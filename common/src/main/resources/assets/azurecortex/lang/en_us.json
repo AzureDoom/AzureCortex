@@ -1,6 +1,8 @@
 {
   "entity.azurecortex.cortex_zombie": "Cortex Zombie",
   "entity.azurecortex.cortex_skeleton": "Cortex Skeleton",
+  "entity.azurecortex.cortex_spider": "Cortex Spider",
   "item.azurecortex.cortex_zombie_spawn_egg": "Cortex Zombie Spawn Egg",
-  "item.azurecortex.cortex_skeleton_spawn_egg": "Cortex Skeleton Spawn Egg"
+  "item.azurecortex.cortex_skeleton_spawn_egg": "Cortex Skeleton Spawn Egg",
+  "item.azurecortex.cortex_spider_spawn_egg": "Cortex Spider Spawn Egg"
 }

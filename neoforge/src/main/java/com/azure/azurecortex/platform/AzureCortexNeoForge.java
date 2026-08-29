@@ -17,6 +17,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import com.azure.azurecortex.AzureCortex;
 import com.azure.azurecortex.example.ExampleRegistry;
 import com.azure.azurecortex.example.skeleton.CortexSkeletonEntity;
+import com.azure.azurecortex.example.spider.CortexSpiderEntity;
 import com.azure.azurecortex.example.zombie.CortexZombieEntity;
 
 @Mod(AzureCortex.MOD_ID)
@@ -44,12 +45,14 @@ public final class AzureCortexNeoForge {
     public void createEntityAttributes(final EntityAttributeCreationEvent event) {
         event.put(ExampleRegistry.CORTEX_SKELETON.get(), CortexSkeletonEntity.createAttributes().build());
         event.put(ExampleRegistry.CORTEX_ZOMBIE.get(), CortexZombieEntity.createAttributes().build());
+        event.put(ExampleRegistry.CORTEX_SPIDER.get(), CortexSpiderEntity.createAttributes().build());
     }
 
     public void addCreativeTabs(final BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
             event.accept(ExampleRegistry.CORTEX_SKELETON_SPAWN_EGG.get());
             event.accept(ExampleRegistry.CORTEX_ZOMBIE_SPAWN_EGG.get());
+            event.accept(ExampleRegistry.CORTEX_SPIDER_SPAWN_EGG.get());
         }
     }
 
@@ -66,6 +69,13 @@ public final class AzureCortexNeoForge {
             SpawnPlacementTypes.ON_GROUND,
             Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
             CortexZombieEntity::checkAnyLightMonsterSpawnRules,
+            RegisterSpawnPlacementsEvent.Operation.AND
+        );
+        event.register(
+            ExampleRegistry.CORTEX_SPIDER.get(),
+            SpawnPlacementTypes.ON_GROUND,
+            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+            CortexSpiderEntity::checkAnyLightMonsterSpawnRules,
             RegisterSpawnPlacementsEvent.Operation.AND
         );
     }
