@@ -138,16 +138,16 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.@NotNull Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(IS_CRAWLING, false);
-        builder.define(CRAWL_FWD_X, 0f);
-        builder.define(CRAWL_FWD_Y, 0f);
-        builder.define(CRAWL_FWD_Z, 1f);
-        builder.define(CRAWL_UP_X, 0f);
-        builder.define(CRAWL_UP_Y, 1f);
-        builder.define(CRAWL_UP_Z, 0f);
-        builder.define(CRAWL_DIST, 0f);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(IS_CRAWLING, false);
+        this.entityData.define(CRAWL_FWD_X, 0f);
+        this.entityData.define(CRAWL_FWD_Y, 0f);
+        this.entityData.define(CRAWL_FWD_Z, 1f);
+        this.entityData.define(CRAWL_UP_X, 0f);
+        this.entityData.define(CRAWL_UP_Y, 1f);
+        this.entityData.define(CRAWL_UP_Z, 0f);
+        this.entityData.define(CRAWL_DIST, 0f);
     }
 
     @Override
