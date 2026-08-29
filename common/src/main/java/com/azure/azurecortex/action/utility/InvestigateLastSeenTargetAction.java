@@ -2,6 +2,10 @@ package com.azure.azurecortex.action.utility;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
+
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.azure.azurecortex.api.action.Action;
 import com.azure.azurecortex.api.action.ActionOutcome;
@@ -29,6 +33,12 @@ import com.azure.azurecortex.sensing.TargetSensor;
  * {@link PlanFailureReason#FAILED_PRECONDITION} if there's no usable sighting to investigate at all, or one already too
  * stale to be worth investigating; fails with {@link PlanFailureReason#FAILED_NO_PATH} /
  * {@link PlanFailureReason#FAILED_STUCK} if the walk itself doesn't pan out.
+ * <h3>Validating the extrapolated point</h3> By default, the predicted point is validated with
+ * {@link TargetPrediction#standableIn}, the ordinary ground-mob check (open space with solid footing directly below).
+ * Mods whose agent doesn't have a ground-only footprint (a wall/ceiling crawler, a flyer) should supply their own
+ * {@code standableFactory} via the second constructor instead of accepting that default — see
+ * {@code com.azure.azurecortex.example.spider.SpiderTraversalPredicates} for a crawler-aware replacement, used exactly
+ * this way by the bundled spider example.
  * <p>
  * Like {@code com.azure.azurecortex.action.movement.MoveToDestinationAction}, this is intentionally a minimal building
  * block: a single one-shot path, no incremental search, no repathing. Mods wanting more (e.g. periodic re-scanning for
@@ -57,6 +67,8 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
     private final double minPredictionDistance;
 
     private final double maxPredictionDistance;
+
+    private final Function<Level, Predicate<BlockPos>> standableFactory;
 
     private BlockPos searchPoint;
 
@@ -90,6 +102,39 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
         double minPredictionDistance,
         double maxPredictionDistance
     ) {
+        this(
+            pathfinder,
+            speed,
+            arrivalRadius,
+            stuckTimeoutTicks,
+            maxSearchAgeTicks,
+            maxPredictionStalenessTicks,
+            minPredictionSpeed,
+            minPredictionDistance,
+            maxPredictionDistance,
+            TargetPrediction::standableIn
+        );
+    }
+
+    /**
+     * As the nine-argument constructor, but with an explicit {@code standableFactory} in place of the default
+     * {@link TargetPrediction#standableIn}, for agents whose footprint isn't ground-only — see the class docs.
+     *
+     * @param standableFactory produces the predicate the extrapolated point is validated against, given the agent's
+     *                         current level
+     */
+    public InvestigateLastSeenTargetAction(
+        Pathfinder pathfinder,
+        double speed,
+        int arrivalRadius,
+        int stuckTimeoutTicks,
+        int maxSearchAgeTicks,
+        int maxPredictionStalenessTicks,
+        double minPredictionSpeed,
+        double minPredictionDistance,
+        double maxPredictionDistance,
+        Function<Level, Predicate<BlockPos>> standableFactory
+    ) {
         this.pathfinder = pathfinder;
         this.speed = speed;
         this.arrivalRadius = arrivalRadius;
@@ -99,6 +144,7 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
         this.minPredictionSpeed = minPredictionSpeed;
         this.minPredictionDistance = minPredictionDistance;
         this.maxPredictionDistance = maxPredictionDistance;
+        this.standableFactory = standableFactory;
     }
 
     @Override
@@ -166,7 +212,7 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
             minPredictionSpeed,
             minPredictionDistance,
             maxPredictionDistance,
-            TargetPrediction.standableIn(agent.level())
+            standableFactory.apply(agent.level())
         );
 
         var path = pathfinder.findPath(agent, agent.blockPosition(), searchPoint, 64, Math.max(arrivalRadius, 1));

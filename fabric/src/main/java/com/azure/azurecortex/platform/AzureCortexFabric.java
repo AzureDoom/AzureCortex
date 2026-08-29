@@ -11,6 +11,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import com.azure.azurecortex.AzureCortex;
 import com.azure.azurecortex.example.ExampleRegistry;
 import com.azure.azurecortex.example.skeleton.CortexSkeletonEntity;
+import com.azure.azurecortex.example.spider.CortexSpiderEntity;
 import com.azure.azurecortex.example.zombie.CortexZombieEntity;
 
 public final class AzureCortexFabric implements ModInitializer {
@@ -26,9 +27,14 @@ public final class AzureCortexFabric implements ModInitializer {
             ExampleRegistry.CORTEX_SKELETON.get(),
             CortexSkeletonEntity.createAttributes()
         );
+        FabricDefaultAttributeRegistry.register(
+            ExampleRegistry.CORTEX_SPIDER.get(),
+            CortexSpiderEntity.createAttributes()
+        );
         ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
             entries.accept(ExampleRegistry.CORTEX_SKELETON_SPAWN_EGG.get());
             entries.accept(ExampleRegistry.CORTEX_ZOMBIE_SPAWN_EGG.get());
+            entries.accept(ExampleRegistry.CORTEX_SPIDER_SPAWN_EGG.get());
         });
         SpawnPlacements.register(
             ExampleRegistry.CORTEX_SKELETON.get(),
@@ -41,6 +47,12 @@ public final class AzureCortexFabric implements ModInitializer {
             SpawnPlacements.Type.ON_GROUND,
             Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
             CortexZombieEntity::checkAnyLightMonsterSpawnRules
+        );
+        SpawnPlacements.register(
+            ExampleRegistry.CORTEX_SPIDER.get(),
+            SpawnPlacements.Type.ON_GROUND,
+            Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+            CortexSpiderEntity::checkAnyLightMonsterSpawnRules
         );
     }
 }
