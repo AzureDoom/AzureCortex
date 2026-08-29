@@ -33,7 +33,7 @@ if (keyPropsFile.exists()) {
     publishMods {
         def releaseProp = new Properties()
         releaseProp.load(new FileInputStream(keyPropsFile))
-        file = remapJar.archiveFile
+        file = jar.archiveFile
         changelog = rootProject.file("changelog.md").text
         type = STABLE
         modLoaders.add("fabric")
