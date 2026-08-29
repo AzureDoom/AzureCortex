@@ -39,12 +39,12 @@ egg to see it in the world:
 
 ## Supported versions & loaders
 
-| Minecraft version | Forge         | Fabric       | NeoForge              |
-|-------------------|---------------|--------------|-----------------------|
-| 1.18.2            | 🔜 planned    | 🔜 planned   | ❌No NeoForge version |
-| 1.20.1            | ✅ available  | ✅ available | ❌No NeoForge version |
-| 1.21.1            | ❌ no support | ✅ available | ✅ available          |
-| 26.2              | ❌ no support | 🔜 planned   | 🔜 planned            |
+| Minecraft version | Forge          | Fabric         | NeoForge              |
+|-------------------|----------------|----------------|-----------------------|
+| 1.18.2            | ✅ available   | ✅ available   | ❌No NeoForge version |
+| 1.20.1            | ✅ available   | ✅ available   | ❌No NeoForge version |
+| 1.21.1            | ❌ no support  | ✅ available   | ✅ available          |
+| 26.2              | ❌ no support  | 🔜 planned     | 🔜 planned            |
 
 ## For mod developers
 
