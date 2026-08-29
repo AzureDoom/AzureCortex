@@ -25,7 +25,7 @@ public final class CortexSkeletonGoalPlanner implements GoalPlanner<CortexSkelet
         Blackboard blackboard,
         CooldownTracker cooldowns
     ) {
-        var currentTick = (int) agent.level().getGameTime();
+        var currentTick = (int) agent.level.getGameTime();
 
         var failureCooldowns = GoalFailureCooldowns.<CortexSkeletonGoal>getOrCreate(blackboard);
         failureCooldowns.evictExpired(currentTick);

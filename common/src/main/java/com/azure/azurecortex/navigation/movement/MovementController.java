@@ -128,7 +128,7 @@ public final class MovementController implements NavigationHandler {
         var away = Vec3.ZERO;
         var box = mob.getBoundingBox().inflate(dangerRadius);
 
-        for (var entity : mob.level().getEntities(mob, box)) {
+        for (var entity : mob.level.getEntities(mob, box)) {
             if (!capability.isHazardEntityType(entity.getType())) {
                 continue;
             }

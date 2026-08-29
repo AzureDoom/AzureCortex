@@ -104,7 +104,7 @@ public final class TargetSensor<E> implements Sensor<E> {
             if (visibilityPredicate != null && visibilityPredicate.test(agent, current)) {
                 blackboard.set(CommonBlackboardKeys.LAST_SEEN_POS, current.blockPosition());
                 blackboard.set(CommonBlackboardKeys.LAST_SEEN_VELOCITY, current.getDeltaMovement());
-                blackboard.set(CommonBlackboardKeys.LAST_SEEN_TICK, (int) current.level().getGameTime());
+                blackboard.set(CommonBlackboardKeys.LAST_SEEN_TICK, (int) current.level.getGameTime());
             }
         }
 
@@ -141,7 +141,7 @@ public final class TargetSensor<E> implements Sensor<E> {
                 return current;
             }
 
-            return agent.level()
+            return agent.level
                 .getEntitiesOfClass(LivingEntity.class, agent.getBoundingBox().inflate(range), validity)
                 .stream()
                 .min(Comparator.comparingDouble(agent::distanceToSqr))

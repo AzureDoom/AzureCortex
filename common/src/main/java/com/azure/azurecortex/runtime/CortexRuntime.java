@@ -235,7 +235,7 @@ public final class CortexRuntime<E extends Mob, G> {
     private void logDiagnosticsIfEnabled() {
         if (!CortexConfig.get().enableAiDiagnostics)
             return;
-        if (agent.level().getGameTime() % 40 != 0)
+        if (agent.level.getGameTime() % 40 != 0)
             return;
 
         CortexDiagnostics.log(agent, blackboard, currentAction);
@@ -294,7 +294,7 @@ public final class CortexRuntime<E extends Mob, G> {
             CommonBlackboardKeys.LAST_PLAN_FEEDBACK,
             PlanFeedback.of(
                 reason,
-                (int) agent.level().getGameTime(),
+                (int) agent.level.getGameTime(),
                 at != null ? at : agent.blockPosition(),
                 goalType,
                 blockingPositions

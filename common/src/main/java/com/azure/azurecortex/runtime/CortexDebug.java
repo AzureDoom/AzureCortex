@@ -32,7 +32,7 @@ public final class CortexDebug {
     public static void sendParticlePath(Mob mob, Vec3 from, Vec3 to) {
         if (!CortexConfig.get().enablePathfindingDebug)
             return;
-        if (!(mob.level() instanceof ServerLevel serverLevel))
+        if (!(mob.level instanceof ServerLevel serverLevel))
             return;
 
         sendNodeMarker(serverLevel, mob, from);
@@ -55,8 +55,8 @@ public final class CortexDebug {
     }
 
     private static void sendNodeMarker(ServerLevel serverLevel, Mob mob, Vec3 pos) {
-        var blockPos = BlockPos.containing(pos);
-        var level = mob.level();
+        var blockPos = new BlockPos(pos);
+        var level = mob.level;
 
         var isClimb = CollisionQueries.isSafeClimbNode(level, blockPos, mob);
         var isWalk = AStarPathfinder.canStandAt(level, mob, blockPos);

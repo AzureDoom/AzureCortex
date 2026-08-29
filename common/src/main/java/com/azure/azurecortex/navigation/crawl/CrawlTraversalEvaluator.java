@@ -62,7 +62,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
         int goalRadius,
         PathNodeCache cache
     ) {
-        var level = mob.level();
+        var level = mob.level;
         var context = TraversalContext.of(level, mob, cache);
 
         var open = new PriorityQueue<>(Comparator.comparingDouble(AStarNode::f));
@@ -171,14 +171,14 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
 
     /** Package-visible so {@code IncrementalPathSession} can reuse it for consistent debug visualization. */
     public static void debugParticlePath(Mob mob, List<BlockPos> path, boolean fullPath) {
-        if (!(mob.level() instanceof ServerLevel serverLevel))
+        if (!(mob.level instanceof ServerLevel serverLevel))
             return;
         if (path.isEmpty())
             return;
         if (!CortexConfig.get().enablePathfindingDebug)
             return;
 
-        var level = mob.level();
+        var level = mob.level;
 
         for (var pos : path) {
             var cx = pos.getX() + 0.5D;

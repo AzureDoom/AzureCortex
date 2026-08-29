@@ -72,7 +72,7 @@ public record SwimAction<E extends Mob, G>(
                 : null;
 
         if (destPos == null) {
-            var now = (int) mob.level().getGameTime();
+            var now = (int) mob.level.getGameTime();
             var strandedSince = blackboard.get(CommonBlackboardKeys.SWIM_STRANDED_SINCE_TICK);
 
             if (strandedSince == null) {
@@ -97,7 +97,7 @@ public record SwimAction<E extends Mob, G>(
                 var climbingLedge = false;
                 if (mob.horizontalCollision) {
                     var liftedBox = mob.getBoundingBox().move(0.0D, 0.6D, 0.0D);
-                    if (mob.level().noCollision(mob, liftedBox)) {
+                    if (mob.level.noCollision(mob, liftedBox)) {
                         movement = new Vec3(movement.x, 0.5D, movement.z);
                         climbingLedge = true;
                     }

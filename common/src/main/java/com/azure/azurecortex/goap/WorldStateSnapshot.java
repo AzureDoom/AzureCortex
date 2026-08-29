@@ -85,7 +85,7 @@ public record WorldStateSnapshot(
         var healthFraction = maxHealth > 0f ? mob.getHealth() / maxHealth : 1f;
         var healthBucket = HealthBucket.of(healthFraction);
 
-        var inDarkness = mob.level().getMaxLocalRawBrightness(mob.blockPosition()) <= DARKNESS_LIGHT_THRESHOLD;
+        var inDarkness = mob.level.getMaxLocalRawBrightness(mob.blockPosition()) <= DARKNESS_LIGHT_THRESHOLD;
 
         return new WorldStateSnapshot(targetId, distanceBucket, healthBucket, inDarkness);
     }

@@ -8,6 +8,7 @@ import net.minecraft.world.item.SpawnEggItem;
 
 import java.util.function.Supplier;
 
+@SuppressWarnings("unused")
 public interface CommonRegistry {
 
     <T> Supplier<T> register(

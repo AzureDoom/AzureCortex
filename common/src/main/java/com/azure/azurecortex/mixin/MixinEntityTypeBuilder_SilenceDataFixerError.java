@@ -5,7 +5,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,9 +48,6 @@ public class MixinEntityTypeBuilder_SilenceDataFixerError implements SilencedEnt
     @Shadow
     private EntityDimensions dimensions;
 
-    @Shadow
-    private FeatureFlagSet requiredFeatures;
-
     @Unique
     @Override
     @SuppressWarnings("unchecked")
@@ -66,8 +62,7 @@ public class MixinEntityTypeBuilder_SilenceDataFixerError implements SilencedEnt
             this.immuneTo,
             this.dimensions,
             this.clientTrackingRange,
-            this.updateInterval,
-            this.requiredFeatures
+            this.updateInterval
         );
     }
 }

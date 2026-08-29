@@ -104,7 +104,7 @@ public final class TraversalQueries {
      * @return {@code true} if the path is clear
      */
     public static boolean isSafeAhead(Mob mob, Vec3 forward, double distance) {
-        var level = mob.level();
+        var level = mob.level;
         var feetY = Mth.floor(mob.getBoundingBox().minY);
         var side = new Vec3(-forward.z, 0.0D, forward.x);
         var halfW = (mob.getBbWidth() / 2.0D) + 0.02D;
@@ -168,13 +168,13 @@ public final class TraversalQueries {
             return false;
         }
 
-        var level = mob.level();
+        var level = mob.level;
         var forward = new Vec3(direction.x, 0.0D, direction.z).normalize();
 
         var landingCenter = mob.position().add(forward.scale(distance));
         var feetY = mob.getBoundingBox().minY;
 
-        var feetPos = BlockPos.containing(landingCenter.x, feetY, landingCenter.z);
+        var feetPos = new BlockPos(landingCenter.x, feetY, landingCenter.z);
         var headPos = feetPos.above();
 
         if (!isSafeBlock(level, feetPos, mob))
@@ -207,7 +207,7 @@ public final class TraversalQueries {
      * @return the nearest matching ground position found, or {@code null} if none was found within range
      */
     public static BlockPos findNearbyGroundPos(Mob mob) {
-        var level = mob.level();
+        var level = mob.level;
         var origin = mob.blockPosition();
 
         for (var dy = 1; dy <= 16; dy++) {

@@ -36,6 +36,6 @@ public record CortexContext(
      * @return a new context snapshot
      */
     public static CortexContext of(Mob mob, Blackboard blackboard, CooldownTracker cooldowns) {
-        return new CortexContext(mob, blackboard, cooldowns, mob.level().getGameTime());
+        return new CortexContext(mob, blackboard, cooldowns, mob.level.getGameTime());
     }
 }

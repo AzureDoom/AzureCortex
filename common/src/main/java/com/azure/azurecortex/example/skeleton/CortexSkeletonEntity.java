@@ -75,7 +75,7 @@ public class CortexSkeletonEntity extends Skeleton {
     public void tick() {
         super.tick();
 
-        if (!this.level().isClientSide() && this.isAlive() && !this.isNoAi()) {
+        if (!this.level.isClientSide() && this.isAlive() && !this.isNoAi()) {
             tickGoalPlanner();
             runtime.tick();
         }
@@ -84,7 +84,7 @@ public class CortexSkeletonEntity extends Skeleton {
     private void tickGoalPlanner() {
         var blackboard = runtime.getBlackboard();
         var cooldowns = runtime.getCooldowns();
-        var currentTick = (int) this.level().getGameTime();
+        var currentTick = (int) this.level.getGameTime();
 
         var activeGoalType = blackboard.get(CommonBlackboardKeys.ACTIVE_GOAL_TYPE);
         var isPassive = activeGoalType == null

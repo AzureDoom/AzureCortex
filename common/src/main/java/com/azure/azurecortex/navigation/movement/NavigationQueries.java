@@ -35,16 +35,16 @@ public final class NavigationQueries {
      */
     public static MovementType requiredMovementAt(Mob mob, BlockPos pos) {
         var below = pos.below();
-        var stateBelow = mob.level().getBlockState(below);
+        var stateBelow = mob.level.getBlockState(below);
 
-        if (stateBelow.entityCanStandOn(mob.level(), below, mob)) {
+        if (stateBelow.entityCanStandOn(mob.level, below, mob)) {
             return MovementType.WALK;
         }
 
         var twoBelow = below.below();
-        var stateTwoBelow = mob.level().getBlockState(twoBelow);
+        var stateTwoBelow = mob.level.getBlockState(twoBelow);
 
-        if (stateTwoBelow.entityCanStandOn(mob.level(), twoBelow, mob)) {
+        if (stateTwoBelow.entityCanStandOn(mob.level, twoBelow, mob)) {
             return MovementType.JUMP;
         }
 
@@ -64,13 +64,13 @@ public final class NavigationQueries {
             return false;
         }
 
-        var center = BlockPos.containing(
+        var center = new BlockPos(
             mob.getBoundingBox().getCenter().x,
             mob.getBoundingBox().getCenter().y,
             mob.getBoundingBox().getCenter().z
         );
 
-        if (!CollisionQueries.isClimbable(mob.level(), center, true)) {
+        if (!CollisionQueries.isClimbable(mob.level, center, true)) {
             return false;
         }
 
@@ -79,7 +79,7 @@ public final class NavigationQueries {
             return true;
         }
 
-        var wantedBlock = BlockPos.containing(wanted.x, wanted.y, wanted.z);
+        var wantedBlock = new BlockPos(wanted.x, wanted.y, wanted.z);
         var wantedType = requiredMovementAt(mob, wantedBlock);
 
         if (wantedType == MovementType.CLIMB) {

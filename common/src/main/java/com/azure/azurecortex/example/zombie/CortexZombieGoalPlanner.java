@@ -34,7 +34,7 @@ public final class CortexZombieGoalPlanner implements GoalPlanner<CortexZombieEn
         Blackboard blackboard,
         CooldownTracker cooldowns
     ) {
-        var currentTick = (int) agent.level().getGameTime();
+        var currentTick = (int) agent.level.getGameTime();
 
         var healthFraction = agent.getMaxHealth() > 0f ? agent.getHealth() / agent.getMaxHealth() : 1f;
         if (healthFraction <= EAT_HEALTH_FRACTION && agent.getOffhandItem().is(Items.GOLDEN_APPLE)) {

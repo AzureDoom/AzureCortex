@@ -128,7 +128,7 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
             }
         }
 
-        var level = agent.level();
+        var level = agent.level;
         var waypoint = path.get(waypointIndex);
         var waypointCenter = Vec3.atBottomCenterOf(waypoint);
 

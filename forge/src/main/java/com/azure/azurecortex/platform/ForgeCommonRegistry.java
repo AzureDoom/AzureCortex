@@ -1,7 +1,6 @@
 package com.azure.azurecortex.platform;
 
 import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
@@ -16,15 +15,15 @@ import com.azure.azurecortex.services.CommonRegistry;
 
 public class ForgeCommonRegistry implements CommonRegistry {
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "deprecation" })
     @Override
     public <T> Supplier<T> register(Registry<? super T> registry, String registryName, Supplier<? extends T> supplier) {
-        if (registry == BuiltInRegistries.ITEM) {
+        if (registry == Registry.ITEM) {
             return (Supplier<T>) AzureCortexForge.itemDeferredRegister.register(
                 registryName,
                 (Supplier<Item>) supplier
             );
-        } else if (registry == BuiltInRegistries.ENTITY_TYPE) {
+        } else if (registry == Registry.ENTITY_TYPE) {
             return (Supplier<T>) AzureCortexForge.entityTypeDeferredRegister.register(
                 registryName,
                 (Supplier<EntityType<?>>) supplier

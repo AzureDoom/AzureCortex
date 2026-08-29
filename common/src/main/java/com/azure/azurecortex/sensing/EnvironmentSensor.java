@@ -24,7 +24,7 @@ public final class EnvironmentSensor {
      * @param threshold the maximum light level still considered "dark"
      */
     public static boolean isInDarkness(Mob agent, int threshold) {
-        return agent.level().getMaxLocalRawBrightness(agent.blockPosition()) <= threshold;
+        return agent.level.getMaxLocalRawBrightness(agent.blockPosition()) <= threshold;
     }
 
     /**

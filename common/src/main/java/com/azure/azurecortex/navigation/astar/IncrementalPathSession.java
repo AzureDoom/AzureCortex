@@ -137,8 +137,8 @@ public final class IncrementalPathSession {
         this.cache = cache;
         this.mode = mode;
         this.context = cache != null
-            ? TraversalContext.of(mob.level(), mob, cache)
-            : TraversalContext.of(mob.level(), mob);
+            ? TraversalContext.of(mob.level, mob, cache)
+            : TraversalContext.of(mob.level, mob);
 
         open.add(new AStarNode(startFeet, 0.0D, evaluator.heuristic(startFeet, goalFeet), null));
         bestCost.put(startFeet, 0.0D);
@@ -253,7 +253,7 @@ public final class IncrementalPathSession {
         if (status != Status.RUNNING)
             return status;
 
-        var level = mob.level();
+        var level = mob.level;
         var spent = 0;
 
         while (!open.isEmpty() && spent < nodeBudget) {
@@ -335,7 +335,7 @@ public final class IncrementalPathSession {
     /** Applies the same post-processing/debug-visualization the corresponding synchronous {@code findPath} would. */
     private List<BlockPos> finalizePath(List<BlockPos> rawPath, boolean fullPath) {
         if (mode == Mode.CRAWLING) {
-            var filtered = CrawlTraversalEvaluator.filterTransitionNodes(rawPath, mob.level(), mob, cache);
+            var filtered = CrawlTraversalEvaluator.filterTransitionNodes(rawPath, mob.level, mob, cache);
             CrawlTraversalEvaluator.debugParticlePath(mob, filtered, fullPath);
             return filtered;
         }

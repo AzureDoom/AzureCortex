@@ -39,7 +39,7 @@ public final class AStarPathfinder implements Pathfinder, TraversalEvaluator {
 
     @Override
     public List<BlockPos> findPath(Mob mob, BlockPos start, BlockPos goal, int maxRange, int goalRadius) {
-        var level = mob.level();
+        var level = mob.level;
         var context = TraversalContext.of(level, mob);
 
         var open = new PriorityQueue<>(Comparator.comparingDouble(AStarNode::f));

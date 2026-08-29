@@ -1,7 +1,7 @@
 package com.azure.azurecortex.runtime;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 
@@ -89,8 +89,8 @@ public final class CortexDiagnostics {
     }
 
     private static String describeBlock(Mob agent, BlockPos pos) {
-        var block = agent.level().getBlockState(pos).getBlock();
-        var key = BuiltInRegistries.BLOCK.getKey(block);
+        var block = agent.level.getBlockState(pos).getBlock();
+        var key = Registry.BLOCK.getKey(block);
         return key.getPath().toUpperCase(Locale.ROOT);
     }
 }

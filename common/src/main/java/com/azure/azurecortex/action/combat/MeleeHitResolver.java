@@ -56,7 +56,7 @@ public final class MeleeHitResolver {
      * @return {@code true} if nothing solid blocks a straight line between the two eye positions
      */
     public static boolean hasMeleeLineOfSight(Mob mob, LivingEntity target) {
-        var level = mob.level();
+        var level = mob.level;
 
         var from = mob.getEyePosition();
         var to = target.getEyePosition();

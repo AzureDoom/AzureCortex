@@ -1,9 +1,10 @@
 package com.azure.azurecortex.example;
 
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 
@@ -45,7 +46,7 @@ public class ExampleRegistry {
             ExampleRegistry.CORTEX_SPIDER,
             3419431,
             11013646,
-            new Item.Properties()
+            new Item.Properties().tab(CreativeModeTab.TAB_MISC)
         )
     );
 
@@ -55,7 +56,7 @@ public class ExampleRegistry {
             ExampleRegistry.CORTEX_SKELETON,
             12698049,
             4802889,
-            new Item.Properties()
+            new Item.Properties().tab(CreativeModeTab.TAB_MISC)
         )
     );
 
@@ -65,7 +66,7 @@ public class ExampleRegistry {
             ExampleRegistry.CORTEX_ZOMBIE,
             44975,
             7969893,
-            new Item.Properties()
+            new Item.Properties().tab(CreativeModeTab.TAB_MISC)
         )
     );
 
@@ -84,14 +85,14 @@ public class ExampleRegistry {
         float height
     ) {
         return ExampleServices.COMMON_REGISTRY.register(
-            BuiltInRegistries.ENTITY_TYPE,
+            Registry.ENTITY_TYPE,
             entityName,
             () -> create(entity, width, height).buildWithoutDataFixerCheck()
         );
     }
 
     public static <T extends Item> Supplier<T> registerItem(String itemName, Supplier<T> item) {
-        return ExampleServices.COMMON_REGISTRY.register(BuiltInRegistries.ITEM, itemName, item);
+        return ExampleServices.COMMON_REGISTRY.register(Registry.ITEM, itemName, item);
     }
 
     public static void initialize() {}

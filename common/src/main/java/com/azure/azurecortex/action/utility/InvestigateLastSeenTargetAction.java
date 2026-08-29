@@ -195,7 +195,7 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
         }
 
         var lastSeenTick = blackboard.get(CommonBlackboardKeys.LAST_SEEN_TICK);
-        var currentTick = (int) agent.level().getGameTime();
+        var currentTick = (int) agent.level.getGameTime();
 
         if (lastSeenTick != null && currentTick - lastSeenTick > maxSearchAgeTicks) {
             return ActionOutcome.failed(PlanFailureReason.FAILED_PRECONDITION, lastSeenPos);
@@ -212,7 +212,7 @@ public class InvestigateLastSeenTargetAction<E extends Mob, G> implements Action
             minPredictionSpeed,
             minPredictionDistance,
             maxPredictionDistance,
-            standableFactory.apply(agent.level())
+            standableFactory.apply(agent.level)
         );
 
         var path = pathfinder.findPath(agent, agent.blockPosition(), searchPoint, 64, Math.max(arrivalRadius, 1));

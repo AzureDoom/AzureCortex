@@ -96,9 +96,9 @@ public final class CrawlController implements NavigationHandler {
         var touchingSurface = isAdjacentToSideWall(mob);
 
         var inTunnel = CrawlTraversalEvaluator.tunnelCanStandAt(
-            mob.level(),
+            mob.level,
             mob,
-            BlockPos.containing(mob.getX(), mob.getBoundingBox().minY, mob.getZ())
+            new BlockPos(mob.getX(), mob.getBoundingBox().minY, mob.getZ())
         );
 
         var active = isCrawling && (touchingSurface || inTunnel);
@@ -148,7 +148,7 @@ public final class CrawlController implements NavigationHandler {
     }
 
     private static Vec3 findSurfaceNormal(Mob mob) {
-        var level = mob.level();
+        var level = mob.level;
         var box = mob.getBoundingBox();
 
         Vec3 bestSurfaceUp = null;
@@ -204,7 +204,7 @@ public final class CrawlController implements NavigationHandler {
     }
 
     private static boolean isAdjacentToSideWall(Mob mob) {
-        var level = mob.level();
+        var level = mob.level;
         var box = mob.getBoundingBox();
 
         var probe = (mob.getBbWidth() / 2.0D) + 0.5D;
@@ -229,7 +229,7 @@ public final class CrawlController implements NavigationHandler {
     }
 
     private static double distanceToSurface(Mob mob, Vec3 normal) {
-        var level = mob.level();
+        var level = mob.level;
         var box = mob.getBoundingBox();
 
         for (var distance = 0.0D; distance <= 1.5D; distance += 0.05D) {
@@ -279,10 +279,10 @@ public final class CrawlController implements NavigationHandler {
 
             if (horizontalDistSqr <= 8.0D * 8.0D) {
                 if (yDiff < 0) {
-                    if (CollisionQueries.isClimbable(mob.level(), mob.blockPosition(), true) || isWallCrawling(mob)) {
+                    if (CollisionQueries.isClimbable(mob.level, mob.blockPosition(), true) || isWallCrawling(mob)) {
                         return true;
                     }
-                    var level = mob.level();
+                    var level = mob.level;
                     var origin = mob.blockPosition();
                     for (var dir : Direction.Plane.HORIZONTAL) {
                         var adj = origin.relative(dir);
@@ -300,7 +300,7 @@ public final class CrawlController implements NavigationHandler {
             return isWallBlockedBetween(mob, target);
         }
 
-        return CollisionQueries.isClimbable(mob.level(), target.blockPosition(), false);
+        return CollisionQueries.isClimbable(mob.level, target.blockPosition(), false);
     }
 
     /**
@@ -316,7 +316,7 @@ public final class CrawlController implements NavigationHandler {
      * — i.e. the mob cannot reach the target by walking and needs to climb over or around a wall.
      */
     private static boolean isWallBlockedBetween(Mob mob, LivingEntity target) {
-        var level = mob.level();
+        var level = mob.level;
         var from = mob.position();
         var to = target.position();
 
@@ -332,7 +332,7 @@ public final class CrawlController implements NavigationHandler {
 
         for (var d = 0.5D; d <= Math.min(dist, 4.0D); d += 0.5D) {
             var sample = from.add(dir.scale(d));
-            var feet = BlockPos.containing(sample.x, feetY, sample.z);
+            var feet = new BlockPos(sample.x, feetY, sample.z);
             var head = feet.above();
 
             var feetState = level.getBlockState(feet);
