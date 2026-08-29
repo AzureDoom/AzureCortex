@@ -5,7 +5,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 

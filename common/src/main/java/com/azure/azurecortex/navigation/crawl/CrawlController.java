@@ -169,7 +169,7 @@ public final class CrawlController implements NavigationHandler {
         var detectionProbe = 0.25D;
 
         for (var direction : horizontalDirections) {
-            var intoSurface = Vec3.atLowerCornerOf(direction.getNormal());
+            var intoSurface = Vec3.atLowerCornerOf(direction.getUnitVec3i());
             var movedBox = box.move(intoSurface.scale(detectionProbe));
 
             if (!level.noBlockCollision(mob, movedBox)) {

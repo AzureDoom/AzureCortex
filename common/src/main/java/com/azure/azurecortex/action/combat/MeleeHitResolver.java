@@ -1,5 +1,6 @@
 package com.azure.azurecortex.action.combat;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.ClipContext;
@@ -43,7 +44,9 @@ public final class MeleeHitResolver {
             return false;
 
         mob.getLookControl().setLookAt(target, 30.0F, 30.0F);
-        mob.doHurtTarget(target);
+        if (mob.level() instanceof ServerLevel serverLevel) {
+            mob.doHurtTarget(serverLevel, target);
+        }
         return true;
     }
 

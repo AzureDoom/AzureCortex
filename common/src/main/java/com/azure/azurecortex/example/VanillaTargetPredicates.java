@@ -1,9 +1,9 @@
 package com.azure.azurecortex.example;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.animal.Turtle;
-import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.turtle.Turtle;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.function.Predicate;

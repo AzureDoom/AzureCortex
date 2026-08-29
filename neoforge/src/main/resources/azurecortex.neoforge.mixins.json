@@ -2,8 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.azure.azurecortex.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "refmap": "azurecortex.refmap.json",
+  "compatibilityLevel": "JAVA_25",
   "injectors": {
     "defaultRequire": 1
   },

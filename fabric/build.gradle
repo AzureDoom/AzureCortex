@@ -1,18 +1,14 @@
 plugins {
     id 'multiloader-loader'
-    id 'fabric-loom' version "${fabric_loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${fabric_loom_version}"
     id 'me.modmuss50.mod-publish-plugin' version "${modmuss50_mod_publish_version}"
     id 'com.diffplug.spotless'
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.layered() {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
-    }
-    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 }
 
 loom {

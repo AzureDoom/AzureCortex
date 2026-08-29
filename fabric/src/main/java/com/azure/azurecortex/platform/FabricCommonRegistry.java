@@ -2,6 +2,9 @@ package com.azure.azurecortex.platform;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
@@ -35,13 +38,28 @@ public class FabricCommonRegistry implements CommonRegistry {
     }
 
     @Override
-    public <E extends Mob> Supplier<SpawnEggItem> makeSpawnEggFor(
-        Supplier<EntityType<E>> entityType,
-        int primaryEggColour,
-        int secondaryEggColour,
-        Item.Properties itemProperties
+    public <E extends Mob> Supplier<SpawnEggItem> registerSpawnEgg(
+        String registryName,
+        Supplier<EntityType<E>> entityType
     ) {
-        return () -> new SpawnEggItem(entityType.get(), primaryEggColour, secondaryEggColour, itemProperties);
+        var key = ResourceKey.create(
+            Registries.ITEM,
+            AzureCortex.id(registryName)
+        );
+
+        var item = new SpawnEggItem(
+            new Item.Properties()
+                .setId(key)
+                .spawnEgg(entityType.get())
+        );
+
+        Registry.register(
+            BuiltInRegistries.ITEM,
+            key,
+            item
+        );
+
+        return () -> item;
     }
 
     @Override

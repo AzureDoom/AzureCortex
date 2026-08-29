@@ -4,7 +4,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -28,10 +27,8 @@ public final class AzureCortexNeoForge {
         AzureCortex.MOD_ID
     );
 
-    public static DeferredRegister<Item> itemDeferredRegister = DeferredRegister.create(
-        BuiltInRegistries.ITEM,
-        AzureCortex.MOD_ID
-    );
+    public static final DeferredRegister.Items itemDeferredRegister =
+        DeferredRegister.createItems(AzureCortex.MOD_ID);
 
     public AzureCortexNeoForge(IEventBus modEventBus) {
         AzureCortex.init(FMLPaths.CONFIGDIR.get());

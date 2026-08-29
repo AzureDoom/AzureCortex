@@ -1,7 +1,7 @@
 package com.azure.azurecortex.platform;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.entity.SpawnPlacementTypes;
@@ -32,7 +32,7 @@ public final class AzureCortexFabric implements ModInitializer {
             ExampleRegistry.CORTEX_SPIDER.get(),
             CortexSpiderEntity.createAttributes()
         );
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(entries -> {
             entries.accept(ExampleRegistry.CORTEX_SKELETON_SPAWN_EGG.get());
             entries.accept(ExampleRegistry.CORTEX_ZOMBIE_SPAWN_EGG.get());
             entries.accept(ExampleRegistry.CORTEX_SPIDER_SPAWN_EGG.get());

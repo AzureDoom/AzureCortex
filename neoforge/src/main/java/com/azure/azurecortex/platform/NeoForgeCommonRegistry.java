@@ -8,7 +8,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 
 import java.util.function.Supplier;
 
@@ -37,18 +36,21 @@ public class NeoForgeCommonRegistry implements CommonRegistry {
     }
 
     @Override
-    public <E extends Mob> Supplier<SpawnEggItem> makeSpawnEggFor(
-        Supplier<EntityType<E>> entityType,
-        int primaryEggColour,
-        int secondaryEggColour,
-        Item.Properties itemProperties
+    public <E extends Mob> Supplier<SpawnEggItem> registerSpawnEgg(
+        String registryName,
+        Supplier<EntityType<E>> entityType
     ) {
-        return () -> new DeferredSpawnEggItem(entityType, primaryEggColour, secondaryEggColour, itemProperties);
+        return AzureCortexNeoForge.itemDeferredRegister.registerItem(
+            registryName,
+            properties -> new SpawnEggItem(
+                properties.spawnEgg(entityType.get())
+            )
+        );
     }
 
     @Override
     public boolean isDevelopmentEnvironment() {
-        return !FMLLoader.isProduction();
+        return !FMLLoader.getCurrent().isProduction();
     }
 
     @Override

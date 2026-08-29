@@ -104,7 +104,7 @@ public record SwimAction<E extends Mob, G>(
                 }
 
                 mob.setDeltaMovement(movement);
-                mob.hasImpulse = true;
+                mob.needsSync = true;
                 faceMovementDirection(mob, movement);
 
                 if (climbingLedge) {

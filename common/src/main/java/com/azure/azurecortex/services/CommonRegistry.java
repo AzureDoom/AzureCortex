@@ -3,7 +3,6 @@ package com.azure.azurecortex.services;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 
 import java.util.function.Supplier;
@@ -16,11 +15,9 @@ public interface CommonRegistry {
         Supplier<? extends T> supplier
     );
 
-    <E extends Mob> Supplier<SpawnEggItem> makeSpawnEggFor(
-        Supplier<EntityType<E>> entityType,
-        int primaryEggColour,
-        int secondaryEggColour,
-        Item.Properties itemProperties
+    <E extends Mob> Supplier<SpawnEggItem> registerSpawnEgg(
+        String registryName,
+        Supplier<EntityType<E>> entityType
     );
 
     boolean isDevelopmentEnvironment();
