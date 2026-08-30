@@ -37,6 +37,11 @@ import com.azure.azurecortex.navigation.astar.AStarPathfinder;
  * a bow needs both of those and can't rely on {@code stopUsingItem()} alone: {@code BowItem#releaseUsing} only fires an
  * arrow {@code if (entity instanceof Player)}, so for a mob it silently does nothing, exactly as vanilla's own
  * {@code RangedBowAttackGoal} anticipates by calling {@code performRangedAttack} itself.
+ * <p>
+ * It also supplies {@code onStart}/{@code onStop} to toggle {@code setAggressive}, mirroring what vanilla's own
+ * {@code RangedBowAttackGoal} does in its own {@code start()}/{@code stop()} — this keeps the aggressive-pose state
+ * scoped exactly to "actively drawing/holding the bow" without {@link CortexSkeletonEntity} needing to poll for it
+ * every tick.
  */
 public final class CortexSkeletonTree {
 
@@ -103,7 +108,9 @@ public final class CortexSkeletonTree {
             },
             "skeleton_bow_cooldown",
             20,
-            18
+            18,
+            (agent, blackboard) -> agent.setAggressive(true),
+            (agent, blackboard, reason) -> agent.setAggressive(false)
         );
 
         var melee = new AttackProfile<CortexSkeletonEntity, CortexSkeletonGoal>(
