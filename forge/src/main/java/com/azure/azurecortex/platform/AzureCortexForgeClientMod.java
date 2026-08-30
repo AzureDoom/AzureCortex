@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.Mod;
 import com.azure.azurecortex.AzureCortex;
 import com.azure.azurecortex.example.ExampleRegistry;
 
-@Mod.EventBusSubscriber(modid = AzureCortex.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = AzureCortex.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class AzureCortexForgeClientMod {
 
     @SubscribeEvent
