@@ -93,7 +93,7 @@ public final class CrawlController implements NavigationHandler {
         }
 
         var isCrawling = wallCrawler.isWallCrawling();
-        var touchingSurface = isAdjacentToSideWall(mob);
+        var touchingSurface = isAdjacentToClingSurface(mob);
 
         var inTunnel = CrawlTraversalEvaluator.tunnelCanStandAt(
             mob.level(),
@@ -164,11 +164,17 @@ public final class CrawlController implements NavigationHandler {
             }
         }
 
-        var horizontalDirections = new Direction[] { Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST };
+        var probedDirections = new Direction[] {
+            Direction.NORTH,
+            Direction.SOUTH,
+            Direction.WEST,
+            Direction.EAST,
+            Direction.UP
+        };
 
         var detectionProbe = 0.25D;
 
-        for (var direction : horizontalDirections) {
+        for (var direction : probedDirections) {
             var intoSurface = Vec3.atLowerCornerOf(direction.getNormal());
             var movedBox = box.move(intoSurface.scale(detectionProbe));
 
@@ -203,7 +209,15 @@ public final class CrawlController implements NavigationHandler {
         return new Vec3(0.0D, 1.0D, 0.0D);
     }
 
-    private static boolean isAdjacentToSideWall(Mob mob) {
+    /**
+     * Returns {@code true} if the mob is currently touching a surface it can cling to — a side wall (checked at the
+     * mob's current height and one block up, so it still grips a wall it's partway up) or a ceiling directly overhead.
+     * <p>
+     * The ceiling check matters just as much as the side-wall ones: a mob crawling across a flat ceiling away from any
+     * side wall has nothing horizontal to grip, and without this check {@link #updateWallCrawlingPhysics} would find
+     * {@code touchingSurface == false} and re-enable gravity, yanking the mob off the ceiling mid-crawl.
+     */
+    private static boolean isAdjacentToClingSurface(Mob mob) {
         var level = mob.level();
         var box = mob.getBoundingBox();
 
@@ -216,6 +230,10 @@ public final class CrawlController implements NavigationHandler {
         if (!level.noCollision(mob, box.move(0, 0, probe)))
             return true;
         if (!level.noCollision(mob, box.move(0, 0, -probe)))
+            return true;
+
+        var ceilingProbe = 0.1D;
+        if (!level.noCollision(mob, box.move(0.0D, ceilingProbe, 0.0D)))
             return true;
 
         var standingBox = box.move(0.0D, 1.0D, 0.0D);
