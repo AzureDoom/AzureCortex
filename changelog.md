@@ -1,3 +1,3 @@
 v0.1.2
 
-- First release
+- Fixes hasClimbClearance not using cache
