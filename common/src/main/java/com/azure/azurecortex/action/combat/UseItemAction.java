@@ -40,6 +40,14 @@ import com.azure.azurecortex.runtime.CooldownTracker;
  * constructor parameter rather than a fixed literal. A charge-and-release bow attack and an auto-completing emergency
  * heal-item both reasonably use this same action class, but want very different resistance to preemption once running —
  * a fixed class-level priority couldn't serve both.
+ * <h3>Start/stop lifecycle hooks</h3> {@link #onStart} and {@link #onStop} exist for state that should be true for the
+ * whole duration of the action and nowhere else — the canonical example is {@code Mob#setAggressive(true)} for a bow,
+ * mirroring what vanilla's own {@code RangedBowAttackGoal} does in its {@code start()}/{@code stop()}. {@link #onStop}
+ * is guaranteed to run exactly once for every {@link #onStart} — {@link #stop} is called unconditionally whenever the
+ * action ends, whether that's success (release completed), failure (the {@link ItemCheck} or {@code isUsingItem} check
+ * failed), or external interruption (behavior tree preemption) — so state set in {@link #onStart} can never get stuck
+ * on. Both hooks apply to auto-completing mode too, since "holding the item" is still well-defined there even without a
+ * charge/release cycle.
  *
  * @param <E> the agent type
  * @param <G> the mod-defined goal-type enum
@@ -87,6 +95,29 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
         void onRelease(E agent, Blackboard blackboard, int ticksCharged);
     }
 
+    /**
+     * Runs once, in {@link #start}, immediately after {@link Mob#startUsingItem} — the place for state that should hold
+     * for the entire duration of the use, e.g. {@code agent.setAggressive(true)}. Always paired with exactly one
+     * {@link StopCallback} invocation — see class docs.
+     */
+    @FunctionalInterface
+    public interface StartCallback<E> {
+
+        void onStart(E agent, Blackboard blackboard);
+    }
+
+    /**
+     * Runs once, in {@link #stop}, regardless of whether the action ended via success, failure, or external
+     * interruption — the place to undo whatever {@link StartCallback} set, so it can never get stuck on. {@code reason}
+     * is the same {@link ActionStatus} the framework passed to {@link #stop}, in case the undo logic needs to
+     * distinguish e.g. a clean release from a preempted one.
+     */
+    @FunctionalInterface
+    public interface StopCallback<E> {
+
+        void onStop(E agent, Blackboard blackboard, ActionStatus reason);
+    }
+
     private final InteractionHand hand;
 
     private final ItemCheck<E> itemCheck;
@@ -106,6 +137,10 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
     private final int cooldownTicks;
 
     private final int priority;
+
+    private final StartCallback<E> onStart;
+
+    private final StopCallback<E> onStop;
 
     private int ticksElapsed;
 
@@ -128,6 +163,9 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
      * @param cooldownKey    cooldown set on release/completion
      * @param cooldownTicks  how long that cooldown lasts
      * @param priority       this instance's priority — see class docs for why this is per-instance rather than fixed
+     * @param onStart        optional (nullable) callback run once in {@link #start} — see class docs
+     * @param onStop         optional (nullable) callback run once in {@link #stop}, paired 1:1 with {@code onStart} —
+     *                       see class docs
      */
     public UseItemAction(
         InteractionHand hand,
@@ -139,7 +177,9 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
         ReleaseCallback<E> onRelease,
         String cooldownKey,
         int cooldownTicks,
-        int priority
+        int priority,
+        StartCallback<E> onStart,
+        StopCallback<E> onStop
     ) {
         this.hand = hand;
         this.itemCheck = itemCheck;
@@ -151,6 +191,8 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
         this.cooldownKey = cooldownKey;
         this.cooldownTicks = cooldownTicks;
         this.priority = priority;
+        this.onStart = onStart;
+        this.onStop = onStop;
     }
 
     /**
@@ -171,13 +213,29 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
         int cooldownTicks,
         int priority
     ) {
-        return new UseItemAction<>(hand, itemCheck, 0, 0, null, null, null, cooldownKey, cooldownTicks, priority);
+        return new UseItemAction<>(
+            hand,
+            itemCheck,
+            0,
+            0,
+            null,
+            null,
+            null,
+            cooldownKey,
+            cooldownTicks,
+            priority,
+            null,
+            null
+        );
     }
 
     @Override
     public void start(E agent, Blackboard blackboard, CooldownTracker cooldowns) {
         ticksElapsed = 0;
         agent.startUsingItem(hand);
+        if (onStart != null) {
+            onStart.onStart(agent, blackboard);
+        }
     }
 
     @Override
@@ -231,6 +289,9 @@ public class UseItemAction<E extends Mob, G> implements Action<E, G> {
     public void stop(E agent, Blackboard blackboard, CooldownTracker cooldowns, ActionStatus reason) {
         if (agent.isUsingItem()) {
             agent.stopUsingItem();
+        }
+        if (onStop != null) {
+            onStop.onStop(agent, blackboard, reason);
         }
     }
 
