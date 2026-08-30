@@ -1,3 +1,3 @@
-v0.1.2
+v0.1.3
 
-- Fixes hasClimbClearance not using cache
+- Fixes crash on Forge due to Forge being Forge
