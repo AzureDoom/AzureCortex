@@ -7,6 +7,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 import com.azure.azurecortex.api.blackboard.CommonBlackboardKeys;
@@ -72,12 +73,24 @@ public class CortexSkeletonEntity extends Skeleton {
     }
 
     @Override
+    public void reassessWeaponGoal() {
+        // no-op — prevents AbstractSkeleton's ctor/setItemSlot from re-adding
+        // vanilla's RangedBowAttackGoal/MeleeAttackGoal, which fight your
+        // UseItemAction for control of startUsingItem/stopUsingItem.
+    }
+
+    @Override
     public void tick() {
         super.tick();
 
         if (!this.level.isClientSide() && this.isAlive() && !this.isNoAi()) {
             tickGoalPlanner();
             runtime.tick();
+
+            this.setAggressive(
+                this.isUsingItem()
+                    && this.getUseItem().is(Items.BOW)
+            );
         }
     }
 
