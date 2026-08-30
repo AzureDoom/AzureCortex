@@ -24,6 +24,18 @@ public final class CollisionQueries {
      * Returns {@code true} if the mob's full bounding-box footprint fits safely at {@code feet} — every foot/head cell
      * under its horizontal footprint is a safe, non-hazardous, non-solid (or capability-passable) block, and there is
      * solid ground (or fluid) directly beneath.
+     * <p>
+     * The center column (the one {@code feet} itself sits over) must match exactly at {@code feet.getY()}. Every other
+     * column under the footprint is allowed to be clear at {@code feet.getY() - 1}, {@code feet.getY()}, or
+     * {@code feet.getY() + 1} — i.e. tolerates an ordinary single-block step up or down from the candidate position,
+     * rather than demanding every column be clear at the exact same Y.
+     * <p>
+     * This distinction only matters once the mob's footprint is wider than one block ({@code bbWidth > ~1.0}): a
+     * footprint that size straddles two columns in both X and Z no matter where it's centered, and a natural hillside
+     * is essentially a staircase of single-block steps — an exact-Y-match requirement rejects almost every stance along
+     * it, since one of the straddled columns will always be one block higher or lower than the other. A real mob's body
+     * resting partly on a step like that is completely normal; a narrower mob (whose footprint fits inside one column)
+     * never hits this at all, which is why this only shows up for wider entities.
      *
      * @param level the world
      * @param mob   the mob being evaluated
@@ -45,35 +57,79 @@ public final class CollisionQueries {
 
         for (var x = minX; x <= maxX; x++) {
             for (var z = minZ; z <= maxZ; z++) {
-                var checkFeet = new BlockPos(x, feet.getY(), z);
-                var checkHead = checkFeet.above();
-
-                if (!TraversalQueries.isSafeBlock(level, checkFeet, mob))
+                if (x == feet.getX() && z == feet.getZ()) {
+                    continue;
+                }
+                if (!edgeColumnClear(level, mob, capability, x, feet.getY(), z)) {
                     return false;
-                if (!TraversalQueries.isSafeBlock(level, checkHead, mob))
-                    return false;
-
-                var feetState = level.getBlockState(checkFeet);
-                var headState = level.getBlockState(checkHead);
-
-                if (
-                    !feetState.getCollisionShape(level, checkFeet).isEmpty()
-                        && !capability.isPassableSolid(level, checkFeet, feetState)
-                )
-                    return false;
-
-                if (
-                    !headState.getCollisionShape(level, checkHead).isEmpty()
-                        && !capability.isPassableSolid(level, checkHead, headState)
-                )
-                    return false;
+                }
             }
         }
 
-        var feetState = level.getBlockState(feet);
+        var checkFeet = feet;
+        var checkHead = feet.above();
+
+        if (!TraversalQueries.isSafeBlock(level, checkFeet, mob))
+            return false;
+        if (!TraversalQueries.isSafeBlock(level, checkHead, mob))
+            return false;
+
+        var feetState = level.getBlockState(checkFeet);
+        var headState = level.getBlockState(checkHead);
+
+        if (
+            !feetState.getCollisionShape(level, checkFeet).isEmpty()
+                && !capability.isPassableSolid(level, checkFeet, feetState)
+        )
+            return false;
+
+        if (
+            !headState.getCollisionShape(level, checkHead).isEmpty()
+                && !capability.isPassableSolid(level, checkHead, headState)
+        )
+            return false;
+
         var isInFluid = !feetState.getFluidState().isEmpty();
         var below = feet.below();
         return isInFluid || !level.getBlockState(below).getCollisionShape(level, below).isEmpty();
+    }
+
+    /**
+     * Returns {@code true} if column {@code (x, z)} is clear enough for the edge of a wide mob's footprint to rest
+     * there, checking {@code candidateY - 1}, {@code candidateY}, and {@code candidateY + 1} rather than only
+     * {@code candidateY} — see {@link #canStandAt}'s class docs for why an edge column needs this tolerance and the
+     * center column doesn't.
+     */
+    private static boolean edgeColumnClear(
+        Level level,
+        Mob mob,
+        MovementCapability capability,
+        int x,
+        int candidateY,
+        int z
+    ) {
+        for (var dy = -1; dy <= 1; dy++) {
+            var checkFeet = new BlockPos(x, candidateY + dy, z);
+            var checkHead = checkFeet.above();
+
+            if (!TraversalQueries.isSafeBlock(level, checkFeet, mob))
+                continue;
+            if (!TraversalQueries.isSafeBlock(level, checkHead, mob))
+                continue;
+
+            var feetState = level.getBlockState(checkFeet);
+            var headState = level.getBlockState(checkHead);
+
+            var feetOk = feetState.getCollisionShape(level, checkFeet).isEmpty()
+                || capability.isPassableSolid(level, checkFeet, feetState);
+            var headOk = headState.getCollisionShape(level, checkHead).isEmpty()
+                || capability.isPassableSolid(level, checkHead, headState);
+
+            if (feetOk && headOk) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

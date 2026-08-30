@@ -6,15 +6,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
 import com.azure.azurecortex.api.navigation.Pathfinder;
 import com.azure.azurecortex.config.CortexConfig;
@@ -62,7 +54,7 @@ public final class AStarPathfinder implements Pathfinder, TraversalEvaluator {
 
             var partialScore = heuristic(current.pos(), goalFeet);
 
-            if (partialScore < bestPartialScore && !isSolidlySeparatedVertically(level, current.pos(), goalFeet)) {
+            if (partialScore < bestPartialScore) {
                 bestPartialScore = partialScore;
                 bestPartial = current;
             }

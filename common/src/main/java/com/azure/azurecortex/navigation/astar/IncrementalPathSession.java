@@ -4,14 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
 import com.azure.azurecortex.config.CortexConfig;
 import com.azure.azurecortex.navigation.crawl.CrawlTraversalEvaluator;
@@ -267,10 +260,7 @@ public final class IncrementalPathSession {
             var current = open.poll();
 
             var partialScore = evaluator.heuristic(current.pos(), goalFeet);
-            if (
-                partialScore < bestPartialScore
-                    && !evaluator.isSolidlySeparatedVertically(level, current.pos(), goalFeet)
-            ) {
+            if (partialScore < bestPartialScore) {
                 bestPartialScore = partialScore;
                 bestPartial = current;
             }
