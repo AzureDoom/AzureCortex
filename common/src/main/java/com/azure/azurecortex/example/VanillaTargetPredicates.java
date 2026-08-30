@@ -57,6 +57,7 @@ public final class VanillaTargetPredicates {
 
     @SuppressWarnings("deprecation")
     public static Predicate<LivingEntity> onlyGolemsAtNight() {
-        return candidate -> candidate instanceof IronGolem ironGolem && ironGolem.getLightLevelDependentMagicValue() < 0.5;
+        return candidate -> candidate instanceof IronGolem ironGolem && ironGolem
+            .getLightLevelDependentMagicValue() < 0.5;
     }
 }
