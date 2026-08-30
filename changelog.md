@@ -1,3 +1,6 @@
-v0.1.3
+v0.1.4
 
-- Fixes crash on Forge due to Forge being Forge
+- Fixes example spider to only hunt in the dark.
+- Fixes crawling missing ceilings.
+- Fixes Skeleton Example not doing bow pose when firing with an update to how UseItemAction works.
+- Fixes Spider Example not facing the target or crawling up/down blocks.
