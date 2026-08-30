@@ -41,6 +41,12 @@ public final class PathNodeCache {
 
     private final Long2ByteOpenHashMap climb = new Long2ByteOpenHashMap(128);
 
+    /**
+     * {@code hasClimbClearance} depends on the same per-mob AABB sweep {@link #climb} entries do — see
+     * {@link #hasClimbClearance}.
+     */
+    private final Long2ByteOpenHashMap climbClearance = new Long2ByteOpenHashMap(128);
+
     /** Invalidates all entries while keeping map capacity. Call once per tick / scan / pathfind. */
     public void clear() {
         solid.clear();
@@ -48,6 +54,7 @@ public final class PathNodeCache {
         tunnel.clear();
         shaft.clear();
         climb.clear();
+        climbClearance.clear();
     }
 
     /**
@@ -69,6 +76,7 @@ public final class PathNodeCache {
                     tunnel.remove(key);
                     shaft.remove(key);
                     climb.remove(key);
+                    climbClearance.remove(key);
                 }
             }
         }
@@ -131,6 +139,24 @@ public final class PathNodeCache {
         }
         var result = CollisionQueries.isSafeClimbNode(level, pos, mob, this);
         climb.put(key, result ? TRUE : FALSE);
+        return result;
+    }
+
+    /**
+     * Memoized {@link CrawlTraversalEvaluator#hasClimbClearance}. This is the AABB {@code noBlockCollision} sweep
+     * behind every climb candidate — previously computed fresh on every call (up to ~24 times per single
+     * {@code neighbors()} expansion when wall-crawling), even though adjacent A* nodes overwhelmingly re-check the same
+     * feet positions. Passes itself down to memoize {@code hasClimbClearance}'s own inner {@code isTightTunnel} lookup
+     * too.
+     */
+    public boolean hasClimbClearance(Level level, Mob mob, BlockPos pos) {
+        var key = pos.asLong();
+        var cached = climbClearance.get(key);
+        if (cached != 0) {
+            return cached == TRUE;
+        }
+        var result = CrawlTraversalEvaluator.hasClimbClearance(level, mob, pos, this);
+        climbClearance.put(key, result ? TRUE : FALSE);
         return result;
     }
 }
