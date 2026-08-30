@@ -313,7 +313,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                 for (var rise = 1; rise <= 2; rise++) {
                     var candidate = pos.above(rise);
                     if (
-                        cache.isSafeClimbNode(level, candidate, mob) && hasClimbClearance(level, mob, candidate, cache)
+                        cache.isSafeClimbNode(level, candidate, mob) && cache.hasClimbClearance(level, mob, candidate)
                     ) {
                         result.add(candidate);
                         break;
@@ -326,7 +326,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                         var candidate = side.above(rise);
                         if (
                             cache.isSafeClimbNode(level, candidate, mob)
-                                && hasClimbClearance(level, mob, candidate, cache)
+                                && cache.hasClimbClearance(level, mob, candidate)
                         ) {
                             result.add(candidate);
                             break;
@@ -340,7 +340,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
                 for (var drop = 1; drop <= 2; drop++) {
                     var candidate = side.below(drop);
                     if (
-                        cache.isSafeClimbNode(level, candidate, mob) && hasClimbClearance(level, mob, candidate, cache)
+                        cache.isSafeClimbNode(level, candidate, mob) && cache.hasClimbClearance(level, mob, candidate)
                     ) {
                         result.add(candidate);
                         break;
@@ -471,12 +471,17 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
     }
 
     private static void tryAddClimb(Level level, Mob mob, List<BlockPos> result, BlockPos feet, PathNodeCache cache) {
-        if (cache.isSafeClimbNode(level, feet, mob) && hasClimbClearance(level, mob, feet, cache)) {
+        if (cache.isSafeClimbNode(level, feet, mob) && cache.hasClimbClearance(level, mob, feet)) {
             result.add(feet);
         }
     }
 
-    private static boolean hasClimbClearance(Level level, Mob mob, BlockPos feet, PathNodeCache cache) {
+    /**
+     * Computes climb clearance for {@code feet} via a fresh AABB {@code noCollision} sweep. Adjacent A* nodes re-derive
+     * the same feet positions constantly, so callers should go through {@link PathNodeCache#hasClimbClearance} rather
+     * than calling this directly — see that method's memoization.
+     */
+    public static boolean hasClimbClearance(Level level, Mob mob, BlockPos feet, PathNodeCache cache) {
         var below = feet.below();
         var belowShape = level.getBlockState(below).getCollisionShape(level, below);
         var belowTopY = belowShape.isEmpty() ? 0.0D : belowShape.max(Direction.Axis.Y);
