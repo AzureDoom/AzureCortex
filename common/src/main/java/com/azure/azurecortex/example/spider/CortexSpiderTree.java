@@ -89,10 +89,10 @@ public final class CortexSpiderTree {
 
         var chase = new CrawlToDestinationAction<CortexSpiderEntity, CortexSpiderGoal>(
             CrawlTraversalEvaluator.INSTANCE,
-            1.1D,
+            0.35D,
             1,
             10,
-            60
+            5
         );
 
         return new HuntTargetNode<>(CortexSpiderGoal.HUNT_TARGET, chase, List.of(melee));

@@ -267,10 +267,7 @@ public final class IncrementalPathSession {
             var current = open.poll();
 
             var partialScore = evaluator.heuristic(current.pos(), goalFeet);
-            if (
-                partialScore < bestPartialScore
-                    && !evaluator.isSolidlySeparatedVertically(level, current.pos(), goalFeet)
-            ) {
+            if (partialScore < bestPartialScore) {
                 bestPartialScore = partialScore;
                 bestPartial = current;
             }

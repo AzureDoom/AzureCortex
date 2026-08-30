@@ -76,7 +76,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
         bestCost.put(startFeet, 0.0D);
 
         var searched = 0;
-        var maxSearched = 6000;
+        var maxSearched = 12000;
         AStarNode bestPartial = null;
         var bestPartialScore = Double.MAX_VALUE;
 
@@ -87,7 +87,7 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
 
             var partialScore = heuristic(current.pos(), goalFeet);
 
-            if (partialScore < bestPartialScore && !isSolidlySeparatedVertically(level, current.pos(), goalFeet)) {
+            if (partialScore < bestPartialScore) {
                 bestPartialScore = partialScore;
                 bestPartial = current;
             }
@@ -510,20 +510,27 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
     /**
      * Cheap gate deciding whether it is worth generating any wall-crawl candidates from {@code pos}. Climb nodes
      * require a solid face to grip, so on open terrain this rejects the whole climb-candidate block before it runs.
-     * Matches {@link CollisionQueries#isSafeClimbNode}'s notion of a cling surface: a horizontal neighbor at feet or
-     * head height, or an overhead ceiling — never the floor.
+     * Matches {@link CollisionQueries#isSafeClimbNode}'s actual notion of a cling surface — the same side solid at BOTH
+     * feet and head height (a genuine 2+-block-tall wall), or an overhead ceiling — never the floor.
+     * <p>
+     * This must mirror {@code isSafeClimbNode}'s pairing exactly, not just check each side independently: an ordinary
+     * single-block-tall lip (a hillside step, a tree root, one stair block) is extremely common on natural terrain and
+     * will make exactly one of the feet/head checks solid without the other. Gating on either height independently
+     * fires on every one of those lips — flagging almost every node on a hillside or near foliage as "worth trying to
+     * climb" — which sends the search down the full (expensive) climb-candidate branch at nearly every step even though
+     * {@code isSafeClimbNode} would reject nearly all of them a moment later anyway. That wasted branching is enough to
+     * exhaust the search's node budget on ordinary uneven terrain well before it reaches a distant target, even though
+     * flat ground with no such lips is unaffected.
      */
     private static boolean hasClimbSurfaceNearby(Level level, BlockPos pos, PathNodeCache cache) {
         var head = pos.above();
-        return solidAt(level, pos.north(), cache)
-            || solidAt(level, pos.south(), cache)
-            || solidAt(level, pos.east(), cache)
-            || solidAt(level, pos.west(), cache)
-            || solidAt(level, head.north(), cache)
-            || solidAt(level, head.south(), cache)
-            || solidAt(level, head.east(), cache)
-            || solidAt(level, head.west(), cache)
-            || solidAt(level, head.above(), cache);
+        if (solidAt(level, head.above(), cache)) {
+            return true;
+        }
+        return (solidAt(level, pos.north(), cache) && solidAt(level, head.north(), cache))
+            || (solidAt(level, pos.south(), cache) && solidAt(level, head.south(), cache))
+            || (solidAt(level, pos.east(), cache) && solidAt(level, head.east(), cache))
+            || (solidAt(level, pos.west(), cache) && solidAt(level, head.west(), cache));
     }
 
     public static boolean isTightTunnel(Level level, BlockPos pos) {

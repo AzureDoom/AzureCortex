@@ -62,7 +62,7 @@ public final class AStarPathfinder implements Pathfinder, TraversalEvaluator {
 
             var partialScore = heuristic(current.pos(), goalFeet);
 
-            if (partialScore < bestPartialScore && !isSolidlySeparatedVertically(level, current.pos(), goalFeet)) {
+            if (partialScore < bestPartialScore) {
                 bestPartialScore = partialScore;
                 bestPartial = current;
             }
