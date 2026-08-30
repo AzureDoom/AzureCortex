@@ -140,6 +140,7 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
 
         var velocity = NavigationQueries.computeWallCrawlVelocity(agent, waypointCenter, speed);
         agent.setDeltaMovement(velocity);
+        faceMovementDirection(agent, velocity);
 
         if (agent.position().closerThan(waypointCenter, 0.6D)) {
             waypointIndex++;
@@ -200,5 +201,34 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
     @Override
     public int priority() {
         return 10;
+    }
+
+    /**
+     * Turns the agent to face {@code movement}'s horizontal direction.
+     * <p>
+     * This action drives the agent by setting {@link Mob#setDeltaMovement} directly rather than going through vanilla
+     * {@code PathNavigation}/{@code MoveControl} (see the class docs above for why), so nothing else updates
+     * {@link Mob#setYRot}/{@code yBodyRot}/{@code yHeadRot} while it runs — without this, the agent keeps whatever
+     * facing it happened to have when this action started (often backwards or perpendicular to its actual travel
+     * direction) for as long as it keeps chasing. Mirrors {@code SwimAction#faceMovementDirection}, the other action in
+     * this package that bypasses vanilla movement control the same way.
+     * <p>
+     * Has no effect on a purely vertical step (climbing straight up or down a wall, horizontal movement ~0) — same
+     * limitation as {@code SwimAction}, since there is no meaningful horizontal facing to turn toward in that case, so
+     * the agent simply keeps whatever heading it last had.
+     */
+    private void faceMovementDirection(E agent, Vec3 movement) {
+        if (movement.horizontalDistanceSqr() < 0.0001D)
+            return;
+        var yaw = (float) (Math.atan2(movement.z, movement.x) * (180.0D / Math.PI)) - 90.0F;
+        agent.setYRot(yaw);
+        agent.yBodyRot = yaw;
+        agent.yHeadRot = yaw;
+        agent.getLookControl()
+            .setLookAt(
+                agent.getX() + movement.x,
+                agent.getEyeY(),
+                agent.getZ() + movement.z
+            );
     }
 }
