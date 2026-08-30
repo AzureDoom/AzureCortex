@@ -52,7 +52,10 @@ public final class VanillaTargetPredicates {
 
     @SuppressWarnings("deprecation")
     public static Predicate<LivingEntity> onlyPlayersAtNight() {
-        return candidate -> candidate instanceof Player player && player.getLightLevelDependentMagicValue() < 0.5;
+        return candidate -> candidate instanceof Player player
+            && player.isAlive()
+            && !player.isCreative()
+            && !player.isSpectator() && player.getLightLevelDependentMagicValue() < 0.5;
     }
 
     @SuppressWarnings("deprecation")
