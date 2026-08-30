@@ -49,4 +49,13 @@ public final class VanillaTargetPredicates {
             && turtle.isBaby()
             && !turtle.isInWater();
     }
+
+    public static Predicate<LivingEntity> onlyPlayersAtNight() {
+        return candidate -> candidate instanceof Player player && player.getBrightness() < 0.5;
+    }
+
+    @SuppressWarnings("deprecation")
+    public static Predicate<LivingEntity> onlyGolemsAtNight() {
+        return candidate -> candidate instanceof IronGolem ironGolem && ironGolem.getBrightness() < 0.5;
+    }
 }
