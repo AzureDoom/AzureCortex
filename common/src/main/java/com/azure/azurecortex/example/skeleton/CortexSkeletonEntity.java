@@ -7,7 +7,6 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 import com.azure.azurecortex.api.blackboard.CommonBlackboardKeys;
@@ -86,11 +85,6 @@ public class CortexSkeletonEntity extends Skeleton {
         if (!this.level.isClientSide() && this.isAlive() && !this.isNoAi()) {
             tickGoalPlanner();
             runtime.tick();
-
-            this.setAggressive(
-                this.isUsingItem()
-                    && this.getUseItem().is(Items.BOW)
-            );
         }
     }
 
