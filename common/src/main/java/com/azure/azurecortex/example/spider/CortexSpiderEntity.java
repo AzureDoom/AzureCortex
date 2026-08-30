@@ -114,7 +114,7 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
         super(entityType, level);
 
         var validity = VanillaTargetPredicates.onlyPlayersAtNight()
-                .or(VanillaTargetPredicates.onlyGolemsAtNight());
+            .or(VanillaTargetPredicates.onlyGolemsAtNight());
 
         var targetSensor = new TargetSensor<CortexSpiderEntity>(
             TargetSensor.nearestMatching(20.0D, validity),
