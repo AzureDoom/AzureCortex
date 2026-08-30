@@ -6,8 +6,8 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -135,7 +135,12 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
 
     /** Borrows vanilla {@link Spider}'s tuned attribute values — purely for convenience, no inheritance implied. */
     public static AttributeSupplier.Builder createAttributes() {
-        return Spider.createAttributes();
+        return Spider.createAttributes().add(Attributes.STEP_HEIGHT, 1.5F);
+    }
+
+    @Override
+    public float maxUpStep() {
+        return 1.5F;
     }
 
     @Override
@@ -221,25 +226,6 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
-    }
-
-    /**
-     * Routes movement application through {@link CrawlController} while actively wall-crawling, instead of vanilla's
-     * ordinary gravity-driven {@code travel()} — the same pattern vanilla itself uses for flying mobs
-     * ({@code FlyingMob#travel}), applied here to crawling instead of flight. {@code CrawlToDestinationAction} (see
-     * {@link CortexSpiderTree}) is what actually sets {@link #getDeltaMovement()} each tick via
-     * {@code NavigationQueries#computeWallCrawlVelocity} and toggles {@link #isWallCrawling()} on and off per waypoint;
-     * this override is what makes that velocity actually move the entity along a wall or ceiling instead of being
-     * immediately overwritten by vanilla's own ground-movement/gravity handling.
-     */
-    @Override
-    public void travel(@NotNull Vec3 travelVector) {
-        if (CrawlController.isWallCrawling(this)) {
-            move(MoverType.SELF, getDeltaMovement());
-            setDeltaMovement(getDeltaMovement().scale(0.6D));
-        } else {
-            super.travel(travelVector);
-        }
     }
 
     @Override

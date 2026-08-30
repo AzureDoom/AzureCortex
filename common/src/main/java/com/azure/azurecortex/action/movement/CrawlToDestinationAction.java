@@ -12,6 +12,7 @@ import com.azure.azurecortex.api.action.ActionStatus;
 import com.azure.azurecortex.api.blackboard.Blackboard;
 import com.azure.azurecortex.api.blackboard.CommonBlackboardKeys;
 import com.azure.azurecortex.goap.PlanFailureReason;
+import com.azure.azurecortex.navigation.astar.AStarPathfinder;
 import com.azure.azurecortex.navigation.astar.PathNodeCache;
 import com.azure.azurecortex.navigation.crawl.CrawlCapability;
 import com.azure.azurecortex.navigation.crawl.CrawlController;
@@ -136,10 +137,14 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
             || CrawlTraversalEvaluator.tunnelCanStandAt(level, agent, waypoint)
             || CrawlTraversalEvaluator.verticalShaftCanCrawlAt(level, agent, waypoint);
 
-        CrawlController.setWallCrawling(agent, isClimbNode && CrawlController.canWallCrawl(agent));
+        var wallCrawling = isClimbNode && CrawlController.canWallCrawl(agent);
+        CrawlController.setWallCrawling(agent, wallCrawling);
 
-        var velocity = NavigationQueries.computeWallCrawlVelocity(agent, waypointCenter, speed);
+        var velocity = wallCrawling
+            ? NavigationQueries.computeWallCrawlVelocity(agent, waypointCenter, speed)
+            : computeGroundVelocity(agent, waypointCenter, speed);
         agent.setDeltaMovement(velocity);
+        agent.needsSync = true;
         faceMovementDirection(agent, velocity);
 
         if (agent.position().closerThan(waypointCenter, 0.6D)) {
@@ -174,15 +179,143 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
         }
         cache.clear();
 
+        var radius = Math.max(arrivalRadius, 1);
+
         path = pathfinder.findPath(
             agent,
             agent.blockPosition(),
             destination,
             64,
-            Math.max(arrivalRadius, 1),
+            radius,
             cache
         );
+
+        if (path.isEmpty() || !path.get(path.size() - 1).closerThan(destination, radius + 4)) {
+            fallBackToGroundPathIfBetter(agent, destination, radius);
+        }
+
         waypointIndex = 0;
+    }
+
+    /**
+     * Retries with the plain ground-walking pathfinder when {@link CrawlTraversalEvaluator}'s search either failed
+     * outright or only managed a partial path that doesn't get meaningfully close to {@code destination}.
+     * <p>
+     * The crawl-aware search's neighbor generation is tuned for genuine wall/ceiling climbs — every node near any
+     * naturally uneven terrain (a hillside step, a tree root) still costs far more than a plain ground step, and a long
+     * enough climb or elevation change can still exhaust its search budget even after the branching and partial-path
+     * fixes elsewhere in this class's supporting code. {@code AStarPathfinder} has none of that overhead and reaches
+     * ordinary terrain — including hills — reliably. Mirrors the same fallback the Ovomorphosis mod's own (much more
+     * elaborate) crawl-aware movement action already relies on for exactly this reason: always try the crawl-aware
+     * search first since only it knows how to route over walls and ceilings, but don't let its fragility on ordinary
+     * terrain leave the agent stuck when a plain walk would have gotten there fine.
+     */
+    private void fallBackToGroundPathIfBetter(E agent, BlockPos destination, int radius) {
+        var groundPath = AStarPathfinder.INSTANCE.findPath(agent, agent.blockPosition(), destination, 64, radius);
+
+        if (groundPath.isEmpty()) {
+            return;
+        }
+
+        if (path.isEmpty()) {
+            path = groundPath;
+            return;
+        }
+
+        var groundEndDistSqr = groundPath.get(groundPath.size() - 1).distSqr(destination);
+        var crawlEndDistSqr = path.get(path.size() - 1).distSqr(destination);
+
+        if (groundEndDistSqr < crawlEndDistSqr) {
+            path = groundPath;
+        }
+    }
+
+    /**
+     * Computes velocity for an ordinary (non-climb) waypoint: horizontal steering, an explicit jump impulse over a
+     * detected low step, and a floor on descent speed — leaving gravity to handle everything else.
+     * <p>
+     * {@link NavigationQueries#computeWallCrawlVelocity} aims a full 3D vector straight at the waypoint, which is
+     * correct only while actually wall-crawling — gravity is suppressed then, and this class's {@code travel()}
+     * override applies that velocity directly, bypassing vanilla physics. Off a wall, movement goes through vanilla's
+     * ordinary gravity-driven {@code travel()} instead, and passive step-height assist turns out not to be reliable for
+     * an agent whose deltaMovement is being set manually every tick rather than driven through vanilla's own
+     * {@code MoveControl}/{@code PathNavigation} — Ovomorphosis's own (much more battle-tested) crawl-aware movement
+     * action hits this same issue and works around it identically: explicitly detect a low step immediately ahead (feet
+     * blocked, head clear, one block above that clear) and fire a real jump impulse over it — matching vanilla's own
+     * default jump power (0.42) — rather than trusting the passive assist to engage. Descending gets the same treatment
+     * in miniature: a floor on downward velocity so the agent doesn't hang waiting for gravity to slowly build up speed
+     * from zero at every ledge.
+     */
+    private Vec3 computeGroundVelocity(E agent, Vec3 waypointCenter, double speed) {
+        var current = agent.position();
+        var horizontal = new Vec3(waypointCenter.x - current.x, 0.0D, waypointCenter.z - current.z);
+        var dist = horizontal.length();
+
+        var existingY = agent.getDeltaMovement().y;
+
+        if (dist < 0.05D) {
+            return new Vec3(0.0D, existingY, 0.0D);
+        }
+
+        var forward = horizontal.normalize();
+        var steer = forward.scale(Math.min(speed, dist));
+
+        if (agent.onGround() && isLowStepAhead(agent, forward)) {
+            return new Vec3(steer.x, 0.42D, steer.z);
+        }
+
+        if (waypointCenter.y < current.y - 0.1D) {
+            return new Vec3(steer.x, Math.min(existingY, -0.15D), steer.z);
+        }
+
+        return new Vec3(steer.x, existingY, steer.z);
+    }
+
+    /**
+     * Returns {@code true} if there's a single-block-tall obstruction directly ahead that a jump would clear: solid at
+     * feet height, clear at head height, and clear again one block above that (so jumping onto it doesn't just trade
+     * one obstruction for another). Loosely ported from Ovomorphosis's {@code MoveToTargetAction#isStairBlockAhead} —
+     * the name there reflects its main trigger case, but the check itself is general to any single-block ledge, not
+     * just literal stair blocks.
+     * <p>
+     * Unlike the original, this scales its look-ahead distance to the agent's own half-width and samples across the
+     * full width (mirroring {@code TraversalQueries#isSafeAhead}'s pattern) instead of a single fixed-offset point on
+     * the center line. Ovomorphosis's xenomorph is narrow enough (~0.47 half-width) that a single point 0.6 blocks
+     * ahead is a reasonable stand-in for its whole body; the spider's half-width (~0.72) is wider than that fixed
+     * offset, so the original version could sample a point still under the spider's own belly rather than genuinely
+     * ahead of it, and never checked anything off the center line at all — missing a step that only obstructed one side
+     * of a body this wide. That's why the jump wasn't reliably firing: the stall you were seeing was actually the
+     * unrelated stuck-timeout (60 ticks ≈ 3 seconds, set in {@code CortexSpiderTree}) eventually forcing a repath, not
+     * this check succeeding.
+     */
+    private boolean isLowStepAhead(E agent, Vec3 forward) {
+        var level = agent.level();
+        var halfWidth = (agent.getBbWidth() / 2.0D) + 0.02D;
+        var lookAhead = halfWidth + 0.1D;
+        var side = new Vec3(-forward.z, 0.0D, forward.x);
+        var feetY = agent.getBoundingBox().minY;
+        var aheadPos = agent.position().add(forward.scale(lookAhead));
+
+        for (var s = -halfWidth; s <= halfWidth; s += Math.max(halfWidth, 0.01D)) {
+            var checkPos = aheadPos.add(side.scale(s));
+            var feet = BlockPos.containing(checkPos.x, feetY, checkPos.z);
+            var head = feet.above();
+
+            var feetState = level.getBlockState(feet);
+            var headState = level.getBlockState(head);
+
+            if (feetState.getCollisionShape(level, feet).isEmpty())
+                continue;
+            if (!headState.getCollisionShape(level, head).isEmpty())
+                continue;
+
+            var landing = head.above();
+            if (level.getBlockState(landing).getCollisionShape(level, landing).isEmpty()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
