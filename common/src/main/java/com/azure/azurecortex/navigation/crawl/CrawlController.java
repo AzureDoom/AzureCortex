@@ -49,10 +49,26 @@ public final class CrawlController implements NavigationHandler {
 
     /**
      * Sets the wall-crawling flag on {@code mob} if it implements {@link CrawlCapability}. Does nothing otherwise.
+     * <p>
+     * Immediately calls {@link Mob#refreshDimensions()} whenever this actually flips the flag. Mods commonly override
+     * to report a squeezed, wall-hugging profile while {@link CrawlCapability#isWallCrawling()} is {@code true} (a
+     * wider/taller standing mob flattening against a surface), but {@code Entity#dimensions} is a cached value that
+     * only recomputes when something calls {@code refreshDimensions()} — it does not notice on its own that the flag it
+     * depends on just changed. A mob that lazily refreshes dimensions on some unrelated periodic tick (e.g. alongside a
+     * slow growth-scale update) could otherwise keep colliding with its full standing-size bounding box for several
+     * ticks after {@link CrawlCapability#isWallCrawling()} already reports {@code true} — long enough to snag on a
+     * block that protrudes from an otherwise flat cliff face, since the pathfinder validated that node against the
+     * smaller crawl-profile footprint the mob was supposed to have at that instant, not the stale larger one it was
+     * actually still colliding with. Forcing the refresh right at the transition keeps the real collision box and the
+     * profile pathfinding assumed in sync.
      */
     public static void setWallCrawling(Mob mob, boolean crawling) {
         if (mob instanceof CrawlCapability wallCrawler) {
+            var changed = wallCrawler.isWallCrawling() != crawling;
             wallCrawler.setWallCrawling(crawling);
+            if (changed) {
+                mob.refreshDimensions();
+            }
         }
     }
 
@@ -78,18 +94,19 @@ public final class CrawlController implements NavigationHandler {
      * Updates gravity suppression and fall-distance zeroing each tick for wall-crawling mobs.
      * <p>
      * Gravity is suppressed while the mob is actively crawling or has grace ticks remaining and is adjacent to a
-     * surface. Grace ticks are decremented here.
+     * surface. Grace-tick decay itself is NOT handled here — that's {@link CrawlState#tick()}'s job, called once per
+     * tick from the owning entity's own tick method, and {@link CrawlCapability#setWallCrawling} already refreshes the
+     * counter to its peak every time a movement action calls it with {@code true} (which happens every tick during an
+     * active climb). This method used to also reset/decrement the same counter independently — at a different peak
+     * value (3, vs. 4 elsewhere) — so the two decayed it in lockstep whenever crawling stopped, exhausting the grace
+     * window in about half the intended time. That silently starved every consumer of {@link #wasRecentlyWallCrawling}
+     * (hitbox-dimension timing, action handoffs like {@code BreakToTargetAction}'s maintain-crawl logic) of the
+     * tolerance window they were built to rely on.
      */
     public static void updateWallCrawlingPhysics(Mob mob) {
         if (!(mob instanceof CrawlCapability wallCrawler)) {
             mob.setNoGravity(false);
             return;
-        }
-
-        if (wallCrawler.isWallCrawling()) {
-            wallCrawler.setWallCrawlGraceTicks(3);
-        } else if (wallCrawler.getWallCrawlGraceTicks() > 0) {
-            wallCrawler.setWallCrawlGraceTicks(wallCrawler.getWallCrawlGraceTicks() - 1);
         }
 
         var isCrawling = wallCrawler.isWallCrawling();
