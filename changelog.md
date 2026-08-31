@@ -1,6 +1,3 @@
-v0.1.4
+v0.1.5
 
-- Fixes example spider to only hunt in the dark.
-- Fixes crawling missing ceilings.
-- Fixes Skeleton Example not doing bow pose when firing with an update to how UseItemAction works.
-- Fixes Spider Example not facing the target or crawling up/down blocks.
+- Fix wall-crawl hitbox timing, climb detection anchor, and grace-tick double-decay
