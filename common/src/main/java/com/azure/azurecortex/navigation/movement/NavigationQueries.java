@@ -64,13 +64,9 @@ public final class NavigationQueries {
             return false;
         }
 
-        var center = BlockPos.containing(
-            mob.getBoundingBox().getCenter().x,
-            mob.getBoundingBox().getCenter().y,
-            mob.getBoundingBox().getCenter().z
-        );
+        var feet = mob.blockPosition();
 
-        if (!CollisionQueries.isClimbable(mob.level(), center, true)) {
+        if (!CollisionQueries.isClimbable(mob.level(), feet, true)) {
             return false;
         }
 
