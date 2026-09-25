@@ -74,6 +74,9 @@ public class MixinEntityTypeBuilder_SilenceDataFixerError implements SilencedEnt
     @Shadow
     private boolean allowedInPeaceful;
 
+    @Shadow
+    private boolean trackDeltas;
+
     @Unique
     @Override
     @SuppressWarnings({ "unchecked" })
@@ -95,7 +98,8 @@ public class MixinEntityTypeBuilder_SilenceDataFixerError implements SilencedEnt
             this.descriptionId.get(name),
             this.lootTable.get(name),
             this.requiredFeatures,
-            this.allowedInPeaceful
+            this.allowedInPeaceful,
+            this.trackDeltas
         );
     }
 }
