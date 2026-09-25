@@ -394,6 +394,36 @@ public final class CrawlTraversalEvaluator implements Pathfinder, TraversalEvalu
         return mob.getBbWidth() > mob.getBbHeight() ? halfW : Math.min(halfW, slimCap);
     }
 
+    /**
+     * The slim, crawl-sized AABB the pathfinder itself validates tunnel/shaft nodes against (see
+     * {@link #tunnelCanStandAt} and {@link #verticalShaftCanCrawlAt}), anchored at an arbitrary continuous
+     * {@code feetPos} rather than a block-grid position. Exposed so movement code (see
+     * {@code CrawlController#applySlimMovement}) can validate a mid-stride position with the exact same box the
+     * pathfinder already agreed the mob fits through — without needing the mob's real {@code EntityDimensions} to ever
+     * actually shrink to that size.
+     */
+    public static AABB slimCrawlBox(Mob mob, Vec3 feetPos) {
+        var halfW = crawlHalfWidth(mob, 0.3D);
+        var height = getEffectiveCrawlHeight(mob);
+        return new AABB(
+            feetPos.x - halfW,
+            feetPos.y,
+            feetPos.z - halfW,
+            feetPos.x + halfW,
+            feetPos.y + height,
+            feetPos.z + halfW
+        );
+    }
+
+    /**
+     * {@code true} if the slim crawl box (see {@link #slimCrawlBox}) anchored at {@code feetPos} doesn't collide with
+     * any block. This is the check {@code CrawlController#applySlimMovement} uses to decide whether a squeeze-through
+     * movement step is safe, in place of vanilla's real-bounding-box collision resolution.
+     */
+    public static boolean canOccupySlim(Level level, Mob mob, Vec3 feetPos) {
+        return level.noBlockCollision(mob, slimCrawlBox(mob, feetPos));
+    }
+
     private static boolean isPassableForCrawl(Level level, BlockPos pos, Mob mob) {
         var state = level.getBlockState(pos);
 
