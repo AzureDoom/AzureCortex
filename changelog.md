@@ -1,3 +1,3 @@
-v0.1.4
+v0.1.6
 
-- Fix wall-crawl hitbox timing, climb detection anchor, and grace-tick double-decay
+- More tweaks to crawling, spider example still heavily WIP.
