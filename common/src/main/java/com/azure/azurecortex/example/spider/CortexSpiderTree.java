@@ -92,7 +92,7 @@ public final class CortexSpiderTree {
             0.35D,
             1,
             10,
-            5
+            60
         );
 
         return new HuntTargetNode<>(CortexSpiderGoal.HUNT_TARGET, chase, List.of(melee));

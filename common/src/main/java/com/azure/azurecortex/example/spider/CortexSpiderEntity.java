@@ -229,6 +229,14 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
     }
 
     @Override
+    public void travel(@NotNull Vec3 movement) {
+        if (CrawlController.shouldUseSlimMovement(this) && CrawlController.applySlimMovement(this)) {
+            return;
+        }
+        super.travel(movement);
+    }
+
+    @Override
     public void tick() {
         super.tick();
 

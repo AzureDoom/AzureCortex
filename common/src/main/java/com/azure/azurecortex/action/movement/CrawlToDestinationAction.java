@@ -1,6 +1,8 @@
 package com.azure.azurecortex.action.movement;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.Vec3;
 
@@ -11,6 +13,7 @@ import com.azure.azurecortex.api.action.ActionOutcome;
 import com.azure.azurecortex.api.action.ActionStatus;
 import com.azure.azurecortex.api.blackboard.Blackboard;
 import com.azure.azurecortex.api.blackboard.CommonBlackboardKeys;
+import com.azure.azurecortex.config.CortexConfig;
 import com.azure.azurecortex.goap.PlanFailureReason;
 import com.azure.azurecortex.navigation.astar.AStarPathfinder;
 import com.azure.azurecortex.navigation.astar.PathNodeCache;
@@ -140,8 +143,42 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
         var wallCrawling = isClimbNode && CrawlController.canWallCrawl(agent);
         CrawlController.setWallCrawling(agent, wallCrawling);
 
+        if (CortexConfig.get().enablePathfindingDebug && level instanceof ServerLevel serverLevel) {
+            var toWaypoint = new Vec3(waypointCenter.x - agent.getX(), 0.0D, waypointCenter.z - agent.getZ());
+            var jumpFiring = !wallCrawling
+                && agent.onGround()
+                && toWaypoint.lengthSqr() > 0.0001D
+                && isLowStepAhead(agent, toWaypoint.normalize());
+
+            if (wallCrawling) {
+                serverLevel.sendParticles(
+                    ParticleTypes.WITCH,
+                    agent.getX(),
+                    agent.getY() + agent.getBbHeight() + 0.3D,
+                    agent.getZ(),
+                    3,
+                    0.05D,
+                    0.05D,
+                    0.05D,
+                    0.0D
+                );
+            } else if (jumpFiring) {
+                serverLevel.sendParticles(
+                    ParticleTypes.TOTEM_OF_UNDYING,
+                    agent.getX(),
+                    agent.getY() + agent.getBbHeight() + 0.3D,
+                    agent.getZ(),
+                    5,
+                    0.1D,
+                    0.1D,
+                    0.1D,
+                    0.02D
+                );
+            }
+        }
+
         var velocity = wallCrawling
-            ? NavigationQueries.computeWallCrawlVelocity(agent, waypointCenter, speed)
+            ? computeCrawlVelocity(agent, waypointCenter, speed)
             : computeGroundVelocity(agent, waypointCenter, speed);
         agent.setDeltaMovement(velocity);
         agent.needsSync = true;
@@ -228,6 +265,190 @@ public class CrawlToDestinationAction<E extends Mob, G> implements Action<E, G> 
         if (groundEndDistSqr < crawlEndDistSqr) {
             path = groundPath;
         }
+    }
+
+    /**
+     * Computes velocity for a wall-crawling waypoint, with a step-up assist for the case that stalls the plain
+     * {@link NavigationQueries#computeWallCrawlVelocity} — a waypoint above the agent that straight-line steering can't
+     * reach because a wall is in the way (climbing up a shaft or well being the common case). Ported and generalized
+     * from Ovomorphosis's {@code MoveToTargetAction#verticalStepUp} handling, which exists for exactly this: plain "aim
+     * a 3D vector at the waypoint" steering has nothing to fall back on when the direct line is blocked, and just
+     * stalls in place at the base of the climb.
+     * <p>
+     * Deliberately simplified relative to the original: that version gates on a "needs step up" signal derived from
+     * several interacting fields specific to its own much larger action (tunnel-bias state, break-to-target cooldowns,
+     * a separately-tracked "is currently crawling" flag). Here, since this action already re-evaluates
+     * {@code wallCrawling} fresh every tick per waypoint, "the waypoint is above me" is a sufficient trigger on its own
+     * — {@code computeWallCrawlVelocity} is tried first and only overridden when it can't make horizontal progress.
+     */
+    private Vec3 computeCrawlVelocity(E agent, Vec3 waypointCenter, double speed) {
+        var needsStepUp = waypointCenter.y > agent.getY() + 0.3D;
+
+        if (!needsStepUp) {
+            return NavigationQueries.computeWallCrawlVelocity(agent, waypointCenter, speed);
+        }
+
+        var horizontalToWaypoint = new Vec3(waypointCenter.x - agent.getX(), 0.0D, waypointCenter.z - agent.getZ());
+
+        if (horizontalToWaypoint.lengthSqr() > 0.01D) {
+            var horiz = horizontalToWaypoint.normalize().scale(speed * 0.75D);
+
+            var corrected = removeBlockedHorizontalComponents(
+                agent,
+                new Vec3(horiz.x, Math.max(agent.getDeltaMovement().y, speed * 0.85D), horiz.z)
+            );
+
+            if (corrected.horizontalDistanceSqr() < 0.0001D) {
+                var raisedBox = CrawlController.effectiveBoundingBox(agent).move(horiz.x, 1.05D, horiz.z);
+                if (agent.level().noBlockCollision(agent, raisedBox)) {
+                    return new Vec3(0.0D, Math.max(agent.getDeltaMovement().y, speed * 0.95D), 0.0D);
+                }
+                return findCornerEscapeStepUpVelocity(agent, horizontalToWaypoint, speed);
+            }
+
+            return corrected;
+        }
+
+        var wallDir = findNearestWallDirection(agent);
+        var intoWall = wallDir != null ? wallDir.scale(speed * 0.3D) : Vec3.ZERO;
+        return new Vec3(intoWall.x, Math.max(agent.getDeltaMovement().y, speed * 0.85D), intoWall.z);
+    }
+
+    /**
+     * Zeroes out whichever horizontal component(s) of {@code desired} are immediately blocked, leaving the vertical
+     * component and any unobstructed horizontal component untouched. Uses {@link CrawlController#effectiveBoundingBox}
+     * rather than the agent's real bounding box, since this probes the same slim crawl-sized footprint movement itself
+     * is validated against (see that method's docs) — probing with the real body here would report a horizontal
+     * direction as blocked far more often than the agent's actual crawl-sized profile warrants.
+     */
+    private Vec3 removeBlockedHorizontalComponents(E agent, Vec3 desired) {
+        var level = agent.level();
+        var box = CrawlController.effectiveBoundingBox(agent);
+
+        var x = desired.x;
+        var z = desired.z;
+
+        var probe = Math.max(0.08D, (box.maxX - box.minX) * 0.25D);
+
+        if (Math.abs(x) > 0.0001D) {
+            var xProbe = box.move(Math.copySign(probe, x), 0.0D, 0.0D);
+            if (!level.noBlockCollision(agent, xProbe)) {
+                x = 0.0D;
+            }
+        }
+
+        if (Math.abs(z) > 0.0001D) {
+            var zProbe = box.move(0.0D, 0.0D, Math.copySign(probe, z));
+            if (!level.noBlockCollision(agent, zProbe)) {
+                z = 0.0D;
+            }
+        }
+
+        return new Vec3(x, desired.y, z);
+    }
+
+    /**
+     * Fallback for when straight-line horizontal progress toward a step-up waypoint is blocked and there's no clear
+     * headroom directly above either: tries stepping diagonally around a corner instead (the desired direction itself,
+     * then each perpendicular, then each 45-degree diagonal), picking whichever clear candidate is most aligned with
+     * the original desired direction. This is what actually gets an agent up and out of a shaft whose walls don't line
+     * up with a straight vertical climb — without it, {@link #computeCrawlVelocity} has nothing left to try and the
+     * agent just holds position at the wall.
+     */
+    private Vec3 findCornerEscapeStepUpVelocity(E agent, Vec3 desiredHorizontal, double speed) {
+        var level = agent.level();
+        var box = CrawlController.effectiveBoundingBox(agent);
+
+        var desired = new Vec3(desiredHorizontal.x, 0.0D, desiredHorizontal.z);
+        if (desired.lengthSqr() < 0.0001D) {
+            desired = new Vec3(agent.getLookAngle().x, 0.0D, agent.getLookAngle().z);
+        }
+
+        if (desired.lengthSqr() < 0.0001D) {
+            return new Vec3(0.0D, speed * 0.85D, 0.0D);
+        }
+
+        desired = desired.normalize();
+
+        var candidates = new Vec3[] {
+            new Vec3(desired.x, 0.0D, desired.z),
+            new Vec3(-desired.z, 0.0D, desired.x),
+            new Vec3(desired.z, 0.0D, -desired.x),
+            new Vec3(desired.x - desired.z, 0.0D, desired.z + desired.x),
+            new Vec3(desired.x + desired.z, 0.0D, desired.z - desired.x)
+        };
+
+        var best = Vec3.ZERO;
+        var bestScore = -Double.MAX_VALUE;
+
+        var stepClearY = 1.05D;
+
+        for (var candidate : candidates) {
+            if (candidate.lengthSqr() < 0.0001D) {
+                continue;
+            }
+
+            var dir = candidate.normalize();
+            var testMove = dir.scale(speed * 0.55D);
+            var probeBox = box.move(testMove.x, stepClearY, testMove.z);
+
+            if (!level.noBlockCollision(agent, probeBox)) {
+                continue;
+            }
+
+            var score = dir.dot(desired);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = testMove;
+            }
+        }
+
+        return new Vec3(
+            best.x,
+            Math.max(agent.getDeltaMovement().y, speed * 0.9D),
+            best.z
+        );
+    }
+
+    /**
+     * Finds the direction toward the nearest adjacent wall (checked at the agent's current height and one block up),
+     * for pressing into while climbing a shaft whose waypoint is directly overhead — see {@link #computeCrawlVelocity}.
+     * Returns {@code null} if nothing solid is close enough in any of the four horizontal directions.
+     */
+    private Vec3 findNearestWallDirection(E agent) {
+        var level = agent.level();
+        var box = CrawlController.effectiveBoundingBox(agent);
+        var probe = ((box.maxX - box.minX) / 2.0D) + 0.6D;
+        var standingBox = box.move(0.0D, 1.0D, 0.0D);
+
+        Vec3 best = null;
+        var bestDist = Double.MAX_VALUE;
+
+        var dirs = new Vec3[] {
+            new Vec3(1, 0, 0),
+            new Vec3(-1, 0, 0),
+            new Vec3(0, 0, 1),
+            new Vec3(0, 0, -1)
+        };
+        for (var dir : dirs) {
+            var hitCurrent = !level.noBlockCollision(agent, box.move(dir.scale(probe)));
+            var hitStanding = !level.noBlockCollision(agent, standingBox.move(dir.scale(probe)));
+            if (hitCurrent || hitStanding) {
+                var dist = probe;
+                for (var d = 0.1D; d <= probe; d += 0.1D) {
+                    if (!level.noBlockCollision(agent, box.move(dir.scale(d)))) {
+                        dist = d;
+                        break;
+                    }
+                }
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = dir;
+                }
+            }
+        }
+        return best;
     }
 
     /**
