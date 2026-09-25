@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 import com.azure.azurecortex.api.blackboard.CommonBlackboardKeys;
 import com.azure.azurecortex.api.navigation.MovementCapability;
@@ -220,6 +221,14 @@ public class CortexSpiderEntity extends Spider implements CrawlCapability, Movem
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(2, new RandomLookAroundGoal(this));
+    }
+
+    @Override
+    public void travel(@NotNull Vec3 movement) {
+        if (CrawlController.shouldUseSlimMovement(this) && CrawlController.applySlimMovement(this)) {
+            return;
+        }
+        super.travel(movement);
     }
 
     @Override
