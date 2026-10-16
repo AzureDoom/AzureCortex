@@ -1,7 +1,7 @@
 # AzureCortex
 
 A modular Minecraft entity AI framework combining behavior trees, GOAP (Goal-Oriented Action Planning), blackboards,
-interruptible actions, and custom navigation, including wall and ceiling crawling.
+interruptible actions, and custom navigation.
 
 **AzureCortex is a framework, not a standalone mod.** It adds no blocks or items and doesn't change vanilla gameplay
 on its own. Mod developers depend on it to build sophisticated, non-vanilla mob AI without re-implementing the
@@ -18,8 +18,7 @@ other mod tells you.
 - **Blackboards**: a per-agent state store shared between sensors, the planner, the tree, and actions.
 - **Interruptible actions**: three-tier preemption (`NORMAL` / `LOCKED` / `EMERGENCY`) so a committed action can't be
   interrupted by accident, but a genuine emergency still gets through.
-- **Custom navigation**: its own A* pathfinder with incremental/phased search to spread cost across ticks, plus an
-  optional wall-and-ceiling-crawling movement model for creatures that shouldn't be bound to the floor.
+- **Custom navigation**: its own A* pathfinder with incremental/phased search to spread cost across ticks.
 - **Sensing**: target acquisition with last-seen tracking and velocity-based interception prediction, so a lost
   target is searched for intelligently rather than at its last exact block.
 
@@ -28,23 +27,34 @@ how goals get scored, is a small interface your mod implements. AzureCortex only
 
 ## Example entities
 
-Three fully-wired example entities ship purely to demonstrate the framework in action, spawn one in via its spawn
-egg to see it in the world:
+Two fully-wired example entities ship purely to demonstrate the framework in action, spawn one in via its spawn egg
+(Miscellaneous tab) to see it in the world:
 
-- **Cortex Zombie**, melee, with an emergency healing branch (eat a golden apple when critically wounded).
+- **Cortex Zombie**, melee, with an emergency healing branch (eat a golden apple from its offhand when critically
+  wounded).
 - **Cortex Skeleton**, ranged, smoothly switching between drawing a bow and falling back to melee at point-blank
   range.
-- **Cortex Spider**, climbs walls and ceilings in pursuit of a target, using the same wall/ceiling-crawling
-  navigation model available to any mod built on AzureCortex.
 
 ## Supported versions & loaders
 
-| Minecraft version | Forge          | Fabric           | NeoForge               |
-|-------------------|----------------|------------------|------------------------|
-| 1.18.2            | ✅ available   | ✅ available     | ❌No NeoForge version  |
-| 1.20.1            | ✅ available   | ✅ available     | ❌No NeoForge version  |
-| 1.21.1            | ❌ no support  | ✅ available     | ✅ available           |
-| 26.2              | ❌ no support  | ✅ available     | ✅ available           |
+| Minecraft version | Forge         | Fabric              | NeoForge              |
+|-------------------|---------------|---------------------|-----------------------|
+| 1.18.2            | ✅ available  | ❌No Fabric version | ❌No NeoForge version |
+| 1.18.2            | ✅ available  | ✅ available        | ❌No NeoForge version |
+| 1.20.1            | ✅ available  | ✅ available        | ❌No NeoForge version |
+| 1.21.1            | ❌ no support | ✅ available        | ✅ available          |
+| 26.2              | ❌ no support | ✅ available        | ✅ available          |
+
+## Config
+
+`config/azurecortex.json`, created on first launch:
+
+| Key                                | Default | Meaning                                                       |
+|------------------------------------|---------|---------------------------------------------------------------|
+| `enablePathfindingDebug`           | `false` | Particle visualization of found paths                         |
+| `enableAiDiagnostics`              | `false` | One-line per-agent TARGET/PLAN/ACTION/PATH log every 40 ticks |
+| `enableIncrementalPathfinding`     | `true`  | Spread path searches across ticks                             |
+| `incrementalPathfindingNodeBudget` | `300`   | Nodes expanded per tick per search                            |
 
 ## For mod developers
 
@@ -52,6 +62,16 @@ AzureCortex is published on AzureDoom's public Maven:
 
 ```
 https://maven.azuredoom.com/mods
+```
+
+```groovy
+repositories {
+    maven { url = 'https://maven.azuredoom.com/mods' }
+}
+
+dependencies {
+    implementation fg.deobf("com.azure.azurecortex:azurecortex-forge-1.12.2:${azurecortex_version}")
+}
 ```
 
 See the [wiki's Installation page](https://github.com/AzureDoom/AzureCortex/wiki/Installation) for exact Gradle
@@ -62,9 +82,6 @@ Full documentation lives on the [GitHub wiki](https://github.com/AzureDoom/Azure
 - [Core Concepts](https://github.com/AzureDoom/AzureCortex/wiki/Core-Concepts), the runtime model and tick order.
 - [Full Example Walkthrough](https://github.com/AzureDoom/AzureCortex/wiki/Full-Example-Walkthrough), the bundled
   zombie, traced end to end.
-- [Ranged Example Walkthrough (Skeleton)](https://github.com/AzureDoom/AzureCortex/wiki/Ranged-Example-Walkthrough-Skeleton)
-  and [Wall-Climbing Example (Spider)](<https://github.com/AzureDoom/AzureCortex/wiki/Wall-Climbing-Example-(Spider)>)
-  , the other two bundled examples.
 - Reference pages for [Behavior Trees](https://github.com/AzureDoom/AzureCortex/wiki/Behavior-Trees),
   [GOAP Planning](https://github.com/AzureDoom/AzureCortex/wiki/GOAP-Planning),
   [Sensing](https://github.com/AzureDoom/AzureCortex/wiki/Sensing),
