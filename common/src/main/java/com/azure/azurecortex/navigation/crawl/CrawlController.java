@@ -177,59 +177,54 @@ public final class CrawlController implements NavigationHandler {
      */
     public static boolean applySlimMovement(Mob mob) {
         var level = mob.level();
-        var movement = mob.getDeltaMovement();
         var current = mob.position();
 
-        var full = current.add(movement);
-        if (CrawlTraversalEvaluator.canOccupySlim(level, mob, full)) {
-            mob.setPos(full.x, full.y, full.z);
-            return true;
-        }
-
-        if (!CrawlTraversalEvaluator.canOccupySlim(level, mob, current)) {
-            // Not even standing somewhere valid right now — bail out to vanilla rather than resolve axes from a
-            // position the slim box itself doesn't agree with.
+        if (!CrawlTraversalEvaluator.canOccupySlim(level, mob, current))
             return false;
+
+        var v = mob.getDeltaMovement().add(0.0D, -mob.getGravity(), 0.0D);
+
+        double x = current.x, y = current.y, z = current.z;
+        double vx = v.x, vy = v.y, vz = v.z;
+        boolean hitX = false, hitY = false, hitZ = false;
+
+        if (Math.abs(vy) > 1.0E-6D) {
+            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, new Vec3(x, y + vy, z)))
+                y += vy;
+            else {
+                hitY = true;
+            }
         }
-
-        var resultX = current.x;
-        var resultY = current.y;
-        var resultZ = current.z;
-        var movedAny = false;
-
-        if (Math.abs(movement.y) > 1.0E-6D) {
-            var afterY = new Vec3(resultX, resultY + movement.y, resultZ);
-            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, afterY)) {
-                resultY = afterY.y;
-                movedAny = true;
+        if (Math.abs(vx) > 1.0E-6D) {
+            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, new Vec3(x + vx, y, z)))
+                x += vx;
+            else {
+                hitX = true;
+                vx = 0.0D;
+            }
+        }
+        if (Math.abs(vz) > 1.0E-6D) {
+            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, new Vec3(x, y, z + vz)))
+                z += vz;
+            else {
+                hitZ = true;
+                vz = 0.0D;
             }
         }
 
-        if (Math.abs(movement.x) > 1.0E-6D) {
-            var afterX = new Vec3(resultX + movement.x, resultY, resultZ);
-            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, afterX)) {
-                resultX = afterX.x;
-                movedAny = true;
-            }
-        }
+        var landed = hitY && vy < 0.0D;
+        if (hitY)
+            vy = 0.0D;
 
-        if (Math.abs(movement.z) > 1.0E-6D) {
-            var afterZ = new Vec3(resultX, resultY, resultZ + movement.z);
-            if (CrawlTraversalEvaluator.canOccupySlim(level, mob, afterZ)) {
-                resultZ = afterZ.z;
-                movedAny = true;
-            }
-        }
+        mob.setPos(x, y, z);
 
-        if (movedAny) {
-            mob.setPos(resultX, resultY, resultZ);
-            return true;
-        }
+        mob.horizontalCollision = hitX || hitZ;
+        mob.verticalCollision = hitY;
+        mob.verticalCollisionBelow = landed;
+        mob.setOnGround(landed);
 
-        // Every axis blocked; still validly at the current spot (checked above) — hold position rather than let
-        // vanilla shove the full-size box around, which would immediately eject the mob from a gap its real hitbox
-        // was never meant to enter.
-        mob.setDeltaMovement(Vec3.ZERO);
+        var yDamp = mob.isNoGravity() ? 0.5D : 0.98D;
+        mob.setDeltaMovement(vx * 0.91D, vy * yDamp, vz * 0.91D);
         return true;
     }
 
